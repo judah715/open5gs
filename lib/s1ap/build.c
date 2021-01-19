@@ -110,8 +110,7 @@ ogs_pkbuf_t *ogs_s1ap_build_s1_reset(
 
     memset(&pdu, 0, sizeof (S1AP_S1AP_PDU_t));
     pdu.present = S1AP_S1AP_PDU_PR_initiatingMessage;
-    pdu.choice.initiatingMessage = 
-        CALLOC(1, sizeof(S1AP_InitiatingMessage_t));
+    pdu.choice.initiatingMessage = CALLOC(1, sizeof(S1AP_InitiatingMessage_t));
 
     initiatingMessage = pdu.choice.initiatingMessage;
     initiatingMessage->procedureCode = S1AP_ProcedureCode_id_Reset;

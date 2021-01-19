@@ -37,10 +37,10 @@ ogs_pkbuf_t *ogs_ngap_build_ng_reset(
     NGAP_Cause_PR group, long cause,
     NGAP_UE_associatedLogicalNG_connectionList_t *partOfNG_Interface);
 
-ogs_pkbuf_t *ogs_ngap_build_ng_reset_partial(
-    NGAP_Cause_PR group, long cause,
-    NGAP_AMF_UE_NGAP_ID_t *amf_ue_ngap_id,
-    NGAP_RAN_UE_NGAP_ID_t *ran_ue_ngap_id);
+void ogs_ngap_add_ran_ue_to_ng_reset(
+    NGAP_UE_associatedLogicalNG_connectionList_t *partOfNG_Interface,
+    uint32_t *ran_ue_ngap_id,
+    uint64_t *amf_ue_ngap_id);
 
 ogs_pkbuf_t *ogs_ngap_build_ng_reset_ack(
     NGAP_UE_associatedLogicalNG_connectionList_t *partOfNG_Interface);
