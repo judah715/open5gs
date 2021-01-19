@@ -2506,6 +2506,7 @@ ogs_pkbuf_t *ngap_build_amf_status_transfer(
 }
 #endif
 
+#if 0
 ogs_pkbuf_t *ngap_build_error_indication(
         uint32_t *ran_ue_ngap_id,
         uint64_t *amf_ue_ngap_id,
@@ -2580,7 +2581,6 @@ ogs_pkbuf_t *ngap_build_error_indication(
     return ogs_ngap_encode(&pdu);
 }
 
-#if 0
 ogs_pkbuf_t *ngap_build_s1_reset(
         NGAP_Cause_PR group, long cause,
         NGAP_UE_associatedLogicalNG_connectionList_t *partOfNG_Interface)

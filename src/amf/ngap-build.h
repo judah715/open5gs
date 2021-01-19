@@ -78,6 +78,7 @@ ogs_pkbuf_t *ngap_build_amf_status_transfer(
     NGAP_RANStatusTransfer_TransparentContainer_t
         *gnb_statustransfer_transparentContainer);
 
+#if 0
 ogs_pkbuf_t *ngap_build_error_indication(
     uint32_t *ran_ue_ngap_id,
     uint64_t *amf_ue_ngap_id,
@@ -94,6 +95,7 @@ ogs_pkbuf_t *ngap_build_s1_reset_partial(
 
 ogs_pkbuf_t *ngap_build_s1_reset_ack(
     NGAP_UE_associatedLogicalNG_connectionList_t *partOfS1_Interface);
+#endif
 
 #ifdef __cplusplus
 }
