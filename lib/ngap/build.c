@@ -92,3 +92,65 @@ ogs_pkbuf_t *ngap_build_error_indication(
 
     return ogs_ngap_encode(&pdu);
 }
+
+ogs_pkbuf_t *ngap_build_ng_reset(
+    NGAP_Cause_PR group, long cause,
+    NGAP_UE_associatedLogicalNG_connectionList_t *partOfNG_Interface)
+{
+    NGAP_NGAP_PDU_t pdu;
+    NGAP_InitiatingMessage_t *initiatingMessage = NULL;
+    NGAP_NGReset_t *Reset = NULL;
+
+    NGAP_NGResetIEs_t *ie = NULL;
+    NGAP_Cause_t *Cause = NULL;
+    NGAP_ResetType_t *ResetType = NULL;
+
+    ogs_debug("NGReset");
+
+    memset(&pdu, 0, sizeof (NGAP_NGAP_PDU_t));
+    pdu.present = NGAP_NGAP_PDU_PR_initiatingMessage;
+    pdu.choice.initiatingMessage = CALLOC(1, sizeof(NGAP_InitiatingMessage_t));
+
+    initiatingMessage = pdu.choice.initiatingMessage;
+    initiatingMessage->procedureCode = NGAP_ProcedureCode_id_NGReset;
+    initiatingMessage->criticality = NGAP_Criticality_reject;
+    initiatingMessage->value.present = NGAP_InitiatingMessage__value_PR_NGReset;
+
+    Reset = &initiatingMessage->value.choice.NGReset;
+
+    ie = CALLOC(1, sizeof(NGAP_NGResetIEs_t));
+    ASN_SEQUENCE_ADD(&Reset->protocolIEs, ie);
+
+    ie->id = NGAP_ProtocolIE_ID_id_Cause;
+    ie->criticality = NGAP_Criticality_ignore;
+    ie->value.present = NGAP_NGResetIEs__value_PR_Cause;
+
+    Cause = &ie->value.choice.Cause;
+
+    ie = CALLOC(1, sizeof(NGAP_NGResetIEs_t));
+    ASN_SEQUENCE_ADD(&Reset->protocolIEs, ie);
+
+    ie->id = NGAP_ProtocolIE_ID_id_ResetType;
+    ie->criticality = NGAP_Criticality_reject;
+    ie->value.present = NGAP_NGResetIEs__value_PR_ResetType;
+
+    ResetType = &ie->value.choice.ResetType;
+
+    Cause->present = group;
+    Cause->choice.radioNetwork = cause;
+
+    ogs_debug("    Group[%d] Cause[%d] partOfNG_Interface[%p]",
+        Cause->present, (int)Cause->choice.radioNetwork, partOfNG_Interface);
+
+#if 0
+    if (partOfNG_Interface) {
+        ResetType->present = NGAP_ResetType_PR_partOfNG_Interface;
+        ResetType->choice.partOfNG_Interface = partOfNG_Interface;
+    } else {
+        ResetType->present = NGAP_ResetType_PR_ng_Interface;
+        ResetType->choice.ng_Interface = NGAP_NGResetAll_reset_all;
+    }
+#endif
+
+    return ogs_ngap_encode(&pdu);
+}

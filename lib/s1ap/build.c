@@ -33,7 +33,7 @@ ogs_pkbuf_t *ogs_s1ap_build_error_indication(
     S1AP_ENB_UE_S1AP_ID_t *ENB_UE_S1AP_ID = NULL;
     S1AP_Cause_t *Cause = NULL;
 
-    ogs_debug("[MME] Error Indication");
+    ogs_debug("Error Indication");
 
     memset(&pdu, 0, sizeof (S1AP_S1AP_PDU_t));
     pdu.present = S1AP_S1AP_PDU_PR_initiatingMessage;
@@ -106,7 +106,7 @@ ogs_pkbuf_t *ogs_s1ap_build_s1_reset(
     S1AP_Cause_t *Cause = NULL;
     S1AP_ResetType_t *ResetType = NULL;
 
-    ogs_debug("[MME] Reset");
+    ogs_debug("Reset");
 
     memset(&pdu, 0, sizeof (S1AP_S1AP_PDU_t));
     pdu.present = S1AP_S1AP_PDU_PR_initiatingMessage;
@@ -115,9 +115,8 @@ ogs_pkbuf_t *ogs_s1ap_build_s1_reset(
 
     initiatingMessage = pdu.choice.initiatingMessage;
     initiatingMessage->procedureCode = S1AP_ProcedureCode_id_Reset;
-    initiatingMessage->criticality = S1AP_Criticality_ignore;
-    initiatingMessage->value.present =
-        S1AP_InitiatingMessage__value_PR_Reset;
+    initiatingMessage->criticality = S1AP_Criticality_reject;
+    initiatingMessage->value.present = S1AP_InitiatingMessage__value_PR_Reset;
 
     Reset = &initiatingMessage->value.choice.Reset;
 
@@ -193,7 +192,7 @@ ogs_pkbuf_t *ogs_s1ap_build_s1_reset_ack(
 
     S1AP_ResetAcknowledgeIEs_t *ie = NULL;
 
-    ogs_debug("[MME] Reset acknowledge");
+    ogs_debug("Reset acknowledge");
 
     memset(&pdu, 0, sizeof (S1AP_S1AP_PDU_t));
     pdu.present = S1AP_S1AP_PDU_PR_successfulOutcome;
