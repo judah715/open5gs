@@ -348,14 +348,29 @@ static void test1_func(abts_case *tc, void *data)
     rv = testgnb_ngap_send(ngap, sendbuf);
     ABTS_INT_EQUAL(tc, OGS_OK, rv);
 
+    /* Receive NGResetAcknowledge */
+    recvbuf = testgnb_ngap_read(ngap);
+    ABTS_PTR_NOTNULL(tc, recvbuf);
+    testngap_recv(test_ue, recvbuf);
+    ABTS_INT_EQUAL(tc,
+            NGAP_ProcedureCode_id_NGReset, test_ue->ngap_procedure_code);
+
 #if 0
-    /* Send UEContextReleaseRequest */
-    sendbuf = testngap_build_ue_context_release_request(test_ue,
-            NGAP_Cause_PR_radioNetwork, NGAP_CauseRadioNetwork_user_inactivity,
-            false);
+    /* Send Service Request - INVALID M-TMSI */
+    test_ue->nas_eps_guti.m_tmsi = 0x1234;
+
+    emmbuf = testemm_build_service_request(test_ue);
+    ABTS_PTR_NOTNULL(tc, emmbuf);
+    sendbuf = test_s1ap_build_initial_ue_message(
+            test_ue, emmbuf, S1AP_RRC_Establishment_Cause_mo_Data, true);
     ABTS_PTR_NOTNULL(tc, sendbuf);
-    rv = testgnb_ngap_send(ngap, sendbuf);
+    rv = testenb_s1ap_send(s1ap, sendbuf);
     ABTS_INT_EQUAL(tc, OGS_OK, rv);
+
+    /* Receive Service reject */
+    recvbuf = testenb_s1ap_read(s1ap);
+    ABTS_PTR_NOTNULL(tc, recvbuf);
+    tests1ap_recv(test_ue, recvbuf);
 
     /* Receive UEContextReleaseCommand */
     recvbuf = testgnb_ngap_read(ngap);
