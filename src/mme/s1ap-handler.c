@@ -725,7 +725,8 @@ void s1ap_handle_ue_context_modification_response(
 
     ogs_debug("UE context modification response");
 
-    for (i = 0; i < UEContextModificationResponse->protocolIEs.list.count; i++) {
+    for (i = 0;
+            i < UEContextModificationResponse->protocolIEs.list.count; i++) {
         ie = UEContextModificationResponse->protocolIEs.list.array[i];
         switch (ie->id) {
         case S1AP_ProtocolIE_ID_id_eNB_UE_S1AP_ID:
@@ -2157,7 +2158,7 @@ void s1ap_handle_s1_reset(
 
             item = &ie2->value.choice.UE_associatedLogicalS1_ConnectionItem;
             ogs_assert(item);
-            
+
             ogs_warn("    MME_UE_S1AP_ID[%d] ENB_UE_S1AP_ID[%d]",
                     item->mME_UE_S1AP_ID ? (int)*item->mME_UE_S1AP_ID : -1,
                     item->eNB_UE_S1AP_ID ? (int)*item->eNB_UE_S1AP_ID : -1);

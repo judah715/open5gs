@@ -340,6 +340,15 @@ static void test1_func(abts_case *tc, void *data)
     ABTS_PTR_NOTNULL(tc, recvbuf);
     ogs_pkbuf_free(recvbuf);
 
+    /* Send NGReset */
+    sendbuf = ogs_ngap_build_ng_reset(
+            S1AP_Cause_PR_radioNetwork,
+            S1AP_CauseRadioNetwork_release_due_to_eutran_generated_reason,
+            NULL);
+    rv = testgnb_ngap_send(ngap, sendbuf);
+    ABTS_INT_EQUAL(tc, OGS_OK, rv);
+
+#if 0
     /* Send UEContextReleaseRequest */
     sendbuf = testngap_build_ue_context_release_request(test_ue,
             NGAP_Cause_PR_radioNetwork, NGAP_CauseRadioNetwork_user_inactivity,
@@ -361,6 +370,7 @@ static void test1_func(abts_case *tc, void *data)
     ABTS_PTR_NOTNULL(tc, sendbuf);
     rv = testgnb_ngap_send(ngap, sendbuf);
     ABTS_INT_EQUAL(tc, OGS_OK, rv);
+#endif
 
     ogs_msleep(300);
 

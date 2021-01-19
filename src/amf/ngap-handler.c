@@ -2002,3 +2002,149 @@ void ngap_handle_path_switch_request(
         ogs_pkbuf_free(param.n2smbuf);
     }
 }
+
+void ngap_handle_ng_reset(
+        amf_gnb_t *gnb, ogs_ngap_message_t *message)
+{
+    char buf[OGS_ADDRSTRLEN];
+    int i;
+
+    NGAP_InitiatingMessage_t *initiatingMessage = NULL;
+    NGAP_NGReset_t *NGReset = NULL;
+
+    NGAP_NGResetIEs_t *ie = NULL;
+    NGAP_Cause_t *Cause = NULL;
+    NGAP_ResetType_t *ResetType = NULL;
+    NGAP_UE_associatedLogicalNG_connectionList_t *partOfNG_Interface = NULL;
+
+    ogs_assert(gnb);
+    ogs_assert(gnb->sctp.sock);
+
+    ogs_assert(message);
+    initiatingMessage = message->choice.initiatingMessage;
+    ogs_assert(initiatingMessage);
+    NGReset = &initiatingMessage->value.choice.NGReset;
+    ogs_assert(NGReset);
+
+    ogs_warn("NGReset");
+
+    for (i = 0; i < NGReset->protocolIEs.list.count; i++) {
+        ie = NGReset->protocolIEs.list.array[i];
+        switch (ie->id) {
+        case NGAP_ProtocolIE_ID_id_Cause:
+            Cause = &ie->value.choice.Cause;
+            break;
+        case NGAP_ProtocolIE_ID_id_ResetType:
+            ResetType = &ie->value.choice.ResetType;
+            break;
+        default:
+            break;
+        }
+    }
+
+    ogs_debug("    IP[%s] ENB_ID[%d]",
+            OGS_ADDR(gnb->sctp.addr, buf), gnb->gnb_id);
+
+    ogs_assert(Cause);
+    ogs_debug("    Cause[Group:%d Cause:%d]",
+            Cause->present, (int)Cause->choice.radioNetwork);
+
+    switch (Cause->present) {
+    case NGAP_Cause_PR_radioNetwork:
+    case NGAP_Cause_PR_transport:
+    case NGAP_Cause_PR_protocol:
+    case NGAP_Cause_PR_misc:
+        break;
+    case NGAP_Cause_PR_nas:
+        ogs_warn("NAS-Cause[%d]", (int)Cause->choice.nas);
+        break;
+    default:
+        ogs_warn("Invalid cause group[%d]", Cause->present);
+        break;
+    }
+
+    ogs_assert(ResetType);
+    switch (ResetType->present) {
+    case NGAP_ResetType_PR_nG_Interface:
+        ogs_warn("    NGAP_ResetType_PR_nG_Interface");
+
+#if 0
+        amf_gtp_send_release_all_ue_in_gnb(
+                gnb, OGS_GTP_RELEASE_NG_CONTEXT_REMOVE);
+#endif
+        break;
+#if 0
+    case NGAP_ResetType_PR_partOfNG_Interface:
+        ogs_warn("    NGAP_ResetType_PR_partOfNG_Interface");
+
+        partOfNG_Interface = ResetType->choice.partOfNG_Interface;
+        ogs_assert(partOfNG_Interface);
+        for (i = 0; i < partOfNG_Interface->list.count; i++) {
+            NGAP_UE_associatedLogicalNG_ConnectionItemRes_t *ie2 = NULL;
+            NGAP_UE_associatedLogicalNG_ConnectionItem_t *item = NULL;
+
+            ran_ue_t *ran_ue = NULL;
+            amf_ue_t *amf_ue = NULL;
+
+            ie2 = (NGAP_UE_associatedLogicalNG_ConnectionItemRes_t *)
+                partOfNG_Interface->list.array[i];
+            ogs_assert(ie2);
+
+            item = &ie2->value.choice.UE_associatedLogicalNG_ConnectionItem;
+            ogs_assert(item);
+
+            ogs_warn("    MME_UE_NGAP_ID[%d] ENB_UE_NGAP_ID[%d]",
+                    item->mME_UE_NGAP_ID ? (int)*item->mME_UE_NGAP_ID : -1,
+                    item->eNB_UE_NGAP_ID ? (int)*item->eNB_UE_NGAP_ID : -1);
+
+            if (item->mME_UE_NGAP_ID)
+                ran_ue = ran_ue_find_by_amf_ue_ngap_id( *item->mME_UE_NGAP_ID);
+            else if (item->eNB_UE_NGAP_ID)
+                ran_ue = ran_ue_find_by_ran_ue_ngap_id(gnb,
+                        *item->eNB_UE_NGAP_ID);
+
+            if (ran_ue == NULL) {
+                ogs_warn("Cannot find NG Context "
+                    "(MME_UE_NGAP_ID[%d] ENB_UE_NGAP_ID[%d])",
+                    item->mME_UE_NGAP_ID ? (int)*item->mME_UE_NGAP_ID : -1,
+                    item->eNB_UE_NGAP_ID ? (int)*item->eNB_UE_NGAP_ID : -1);
+                continue;
+            }
+
+            amf_ue = ran_ue->amf_ue;
+            ogs_assert(amf_ue);
+
+            amf_gtp_send_release_access_bearers_request(
+                    amf_ue, OGS_GTP_RELEASE_NG_CONTEXT_REMOVE);
+        }
+        break;
+#endif
+    default:
+        ogs_warn("Invalid ResetType[%d]", ResetType->present);
+        break;
+    }
+
+    /*
+     * In the specification, eNB can send RESET ACK without waiting
+     * for resource release, but MME must send after releasing all resources.
+     *
+     * Why? Huh.. At this point, I implemented MME to send RESET ACK
+     * without waiting for resource release. If problems are found,
+     * I will fix them later.
+     *
+     * TS36.413
+     * 8.7.1.2.1 Reset Procedure Initiated from the MME
+     *
+     * The eNB does not need to wait for the release of radio resources
+     * to be completed before returning the RESET ACKNOWLEDGE message.
+     *
+     * 8.7.1.2.2 Reset Procedure Initiated from the E-UTRAN
+     * After the MME has released all assigned NG resources and
+     * the UE NGAP IDs for all indicated UE associations which can be used
+     * for new UE-associated logical NG-connections over the NG interface,
+     * the MME shall respond with the RESET ACKNOWLEDGE message.
+     */
+#if 0
+    ngap_send_ng_reset_ack(gnb, partOfNG_Interface);
+#endif
+}

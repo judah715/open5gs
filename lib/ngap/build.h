@@ -28,21 +28,21 @@
 extern "C" {
 #endif
 
-ogs_pkbuf_t *ngap_build_error_indication(
+ogs_pkbuf_t *ogs_ngap_build_error_indication(
     uint32_t *ran_ue_ngap_id,
     uint64_t *amf_ue_ngap_id,
     NGAP_Cause_PR group, long cause);
 
-ogs_pkbuf_t *ngap_build_ng_reset(
+ogs_pkbuf_t *ogs_ngap_build_ng_reset(
     NGAP_Cause_PR group, long cause,
     NGAP_UE_associatedLogicalNG_connectionList_t *partOfNG_Interface);
 
-ogs_pkbuf_t *ngap_build_ng_reset_partial(
+ogs_pkbuf_t *ogs_ngap_build_ng_reset_partial(
     NGAP_Cause_PR group, long cause,
     NGAP_AMF_UE_NGAP_ID_t *amf_ue_ngap_id,
     NGAP_RAN_UE_NGAP_ID_t *ran_ue_ngap_id);
 
-ogs_pkbuf_t *ngap_build_ng_reset_ack(
+ogs_pkbuf_t *ogs_ngap_build_ng_reset_ack(
     NGAP_UE_associatedLogicalNG_connectionList_t *partOfNG_Interface);
 
 #ifdef __cplusplus

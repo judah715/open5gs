@@ -549,7 +549,7 @@ void ngap_send_error_indication(
 
     ogs_assert(gnb);
 
-    ngapbuf = ngap_build_error_indication(
+    ngapbuf = ogs_ngap_build_error_indication(
             ran_ue_ngap_id, amf_ue_ngap_id, group, cause);
     ogs_expect_or_return(ngapbuf);
 
