@@ -735,10 +735,10 @@ abts_suite *test_reset(abts_suite *suite)
 {
     suite = ADD_SUITE(suite)
 
-#if 0
     abts_run_test(suite, test1_func, NULL);
-#endif
+#if 0
     abts_run_test(suite, test2_func, NULL);
+#endif
 
     return suite;
 }
