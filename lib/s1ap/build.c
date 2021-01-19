@@ -196,8 +196,7 @@ ogs_pkbuf_t *ogs_s1ap_build_s1_reset_ack(
 
     memset(&pdu, 0, sizeof (S1AP_S1AP_PDU_t));
     pdu.present = S1AP_S1AP_PDU_PR_successfulOutcome;
-    pdu.choice.successfulOutcome = 
-        CALLOC(1, sizeof(S1AP_SuccessfulOutcome_t));
+    pdu.choice.successfulOutcome = CALLOC(1, sizeof(S1AP_SuccessfulOutcome_t));
 
     successfulOutcome = pdu.choice.successfulOutcome;
     successfulOutcome->procedureCode = S1AP_ProcedureCode_id_Reset;

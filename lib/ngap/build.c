@@ -154,3 +154,98 @@ ogs_pkbuf_t *ogs_ngap_build_ng_reset(
 
     return ogs_ngap_encode(&pdu);
 }
+
+ogs_pkbuf_t *ogs_ngap_build_ng_reset_ack(
+        NGAP_UE_associatedLogicalNG_connectionList_t *partOfNG_Interface)
+{
+    NGAP_NGAP_PDU_t pdu;
+    NGAP_SuccessfulOutcome_t *successfulOutcome = NULL;
+    NGAP_NGResetAcknowledge_t *NGResetAcknowledge = NULL;
+
+    NGAP_NGResetAcknowledgeIEs_t *ie = NULL;
+
+    ogs_debug("Reset acknowledge");
+
+    memset(&pdu, 0, sizeof (NGAP_NGAP_PDU_t));
+    pdu.present = NGAP_NGAP_PDU_PR_successfulOutcome;
+    pdu.choice.successfulOutcome = CALLOC(1, sizeof(NGAP_SuccessfulOutcome_t));
+
+    successfulOutcome = pdu.choice.successfulOutcome;
+    successfulOutcome->procedureCode = NGAP_ProcedureCode_id_NGReset;
+    successfulOutcome->criticality = NGAP_Criticality_reject;
+    successfulOutcome->value.present =
+        NGAP_SuccessfulOutcome__value_PR_NGResetAcknowledge;
+
+    NGResetAcknowledge = &successfulOutcome->value.choice.NGResetAcknowledge;
+
+#if 0
+    if (partOfNG_Interface && partOfNG_Interface->list.count) {
+        int i = 0;
+        NGAP_UE_associatedLogicalNG_ConnectionListResAck_t *list = NULL;
+
+        ie = CALLOC(1, sizeof(NGAP_NGResetAcknowledgeIEs_t));
+        ASN_SEQUENCE_ADD(&NGResetAcknowledge->protocolIEs, ie);
+
+        ie->id =
+            NGAP_ProtocolIE_ID_id_UE_associatedLogicalNG_ConnectionListResAck;
+        ie->criticality = NGAP_Criticality_ignore;
+        ie->value.present = NGAP_NGResetAcknowledgeIEs__value_PR_UE_associatedLogicalNG_ConnectionListResAck;
+
+        list = &ie->value.choice.UE_associatedLogicalNG_ConnectionListResAck;
+
+        for (i = 0; i < partOfNG_Interface->list.count; i++) {
+            NGAP_UE_associatedLogicalNG_ConnectionItemRes_t *ie1 = NULL;
+            NGAP_UE_associatedLogicalNG_ConnectionItem_t *item1 = NULL;
+
+            NGAP_UE_associatedLogicalNG_ConnectionItemResAck_t *ie2 = NULL;
+            NGAP_UE_associatedLogicalNG_ConnectionItem_t *item2 = NULL;
+
+            ie1 = (NGAP_UE_associatedLogicalNG_ConnectionItemRes_t *)
+                partOfNG_Interface->list.array[i];
+            ogs_assert(ie1);
+
+            item1 = &ie1->value.choice.UE_associatedLogicalNG_ConnectionItem;
+            ogs_assert(item1);
+
+            if (item1->mME_UE_NGAP_ID == NULL &&
+                    item1->eNB_UE_NGAP_ID == NULL) {
+                ogs_warn("No MME_UE_NGAP_ID & ENB_UE_NGAP_ID");
+                continue;
+            }
+
+            ie2 = CALLOC(1,
+                    sizeof(NGAP_UE_associatedLogicalNG_ConnectionItemResAck_t));
+            ogs_assert(ie2);
+            ASN_SEQUENCE_ADD(&list->list, ie2);
+
+            ie2->id =
+                NGAP_ProtocolIE_ID_id_UE_associatedLogicalNG_ConnectionItem;
+            ie2->criticality = NGAP_Criticality_ignore;
+            ie2->value.present = NGAP_UE_associatedLogicalNG_ConnectionItemResAck__value_PR_UE_associatedLogicalNG_ConnectionItem;
+
+            item2 = &ie2->value.choice.UE_associatedLogicalNG_ConnectionItem;
+            ogs_assert(item2);
+
+            if (item1->mME_UE_NGAP_ID) {
+                item2->mME_UE_NGAP_ID = CALLOC(1,
+                        sizeof(NGAP_MME_UE_NGAP_ID_t));
+                ogs_assert(item2->mME_UE_NGAP_ID);
+                *item2->mME_UE_NGAP_ID = *item1->mME_UE_NGAP_ID;
+            }
+
+            if (item1->eNB_UE_NGAP_ID) {
+                item2->eNB_UE_NGAP_ID = CALLOC(1,
+                        sizeof(NGAP_ENB_UE_NGAP_ID_t));
+                ogs_assert(item2->eNB_UE_NGAP_ID);
+                *item2->eNB_UE_NGAP_ID = *item1->eNB_UE_NGAP_ID;
+            }
+
+            ogs_debug("    MME_UE_NGAP_ID[%d] ENB_UE_NGAP_ID[%d]",
+                item2->mME_UE_NGAP_ID ? (int)*item2->mME_UE_NGAP_ID : -1,
+                item2->eNB_UE_NGAP_ID ? (int)*item2->eNB_UE_NGAP_ID : -1);
+        }
+    }
+#endif
+
+    return ogs_ngap_encode(&pdu);
+}

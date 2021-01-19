@@ -2045,38 +2045,34 @@ void ngap_handle_ng_reset(
     ogs_debug("    IP[%s] ENB_ID[%d]",
             OGS_ADDR(gnb->sctp.addr, buf), gnb->gnb_id);
 
-    ogs_assert(Cause);
-    ogs_debug("    Cause[Group:%d Cause:%d]",
-            Cause->present, (int)Cause->choice.radioNetwork);
-
-    switch (Cause->present) {
-    case NGAP_Cause_PR_radioNetwork:
-    case NGAP_Cause_PR_transport:
-    case NGAP_Cause_PR_protocol:
-    case NGAP_Cause_PR_misc:
-        break;
-    case NGAP_Cause_PR_nas:
-        ogs_warn("NAS-Cause[%d]", (int)Cause->choice.nas);
-        break;
-    default:
-        ogs_warn("Invalid cause group[%d]", Cause->present);
-        break;
+    if (!Cause) {
+        ogs_error("No Cause");
+        ngap_send_error_indication(gnb, NULL, NULL,
+                NGAP_Cause_PR_protocol, NGAP_CauseProtocol_semantic_error);
+        return;
     }
 
-    ogs_assert(ResetType);
+    ogs_warn("    Cause[Group:%d Cause:%d]",
+            Cause->present, (int)Cause->choice.radioNetwork);
+
+    if (!ResetType) {
+        ogs_error("No ResetType");
+        ngap_send_error_indication(gnb, NULL, NULL,
+                NGAP_Cause_PR_protocol, NGAP_CauseProtocol_semantic_error);
+        return;
+    }
+
     switch (ResetType->present) {
     case NGAP_ResetType_PR_nG_Interface:
         ogs_warn("    NGAP_ResetType_PR_nG_Interface");
 
-#if 0
-        amf_gtp_send_release_all_ue_in_gnb(
-                gnb, OGS_GTP_RELEASE_NG_CONTEXT_REMOVE);
-#endif
+        amf_sbi_send_deactivate_all_ue_in_gnb(
+                gnb, AMF_UPDATE_SM_CONTEXT_NG_RESET);
         break;
-#if 0
     case NGAP_ResetType_PR_partOfNG_Interface:
         ogs_warn("    NGAP_ResetType_PR_partOfNG_Interface");
 
+#if 0
         partOfNG_Interface = ResetType->choice.partOfNG_Interface;
         ogs_assert(partOfNG_Interface);
         for (i = 0; i < partOfNG_Interface->list.count; i++) {
@@ -2117,34 +2113,48 @@ void ngap_handle_ng_reset(
             amf_gtp_send_release_access_bearers_request(
                     amf_ue, OGS_GTP_RELEASE_NG_CONTEXT_REMOVE);
         }
-        break;
 #endif
+        break;
     default:
         ogs_warn("Invalid ResetType[%d]", ResetType->present);
         break;
     }
 
     /*
-     * In the specification, eNB can send RESET ACK without waiting
-     * for resource release, but MME must send after releasing all resources.
+     * In the specification,
+     * AMF must send NGReset ACK after releasing all resources.
      *
-     * Why? Huh.. At this point, I implemented MME to send RESET ACK
+     * At this point, I implemented AMF to send NGReset ACK
      * without waiting for resource release. If problems are found,
      * I will fix them later.
      *
-     * TS36.413
-     * 8.7.1.2.1 Reset Procedure Initiated from the MME
+     * TS38.413
      *
-     * The eNB does not need to wait for the release of radio resources
-     * to be completed before returning the RESET ACKNOWLEDGE message.
+     * 8.7.4.2.1 NG Reset initiated by the AMF
+     * At reception of the NG RESET message the NG-RAN node shall release all
+     * allocated resources on NG and Uu related to the UE association(s)
+     * indicated explicitly or implicitly in the NG RESET message and
+     * remove the indicated UE contexts including NGAP ID.
      *
-     * 8.7.1.2.2 Reset Procedure Initiated from the E-UTRAN
-     * After the MME has released all assigned NG resources and
+     * After the NG-RAN node has released all assigned NG resources and
      * the UE NGAP IDs for all indicated UE associations which can be used
      * for new UE-associated logical NG-connections over the NG interface,
-     * the MME shall respond with the RESET ACKNOWLEDGE message.
+     * the NG-RAN node shall respond with the NG RESET ACKNOWLEDGE message.
+     *
+     * The NG-RAN node does not need to wait for the release of radio resources
+     * to be completed before returning the NG RESET ACKNOWLEDGE message.
+     *
+     * 8.7.4.2.2 NG Reset initiated by the NG-RAN node
+     *
+     * At reception of the NG RESET message the AMF shall release
+     * all allocated resources on NG related to the UE association(s)
+     * indicated explicitly or implicitly in the NG RESET message and
+     * remove the NGAP ID for the indicated UE associations.
+     *
+     * After the AMF has released all assigned NG resources and
+     * the UE NGAP IDs for all indicated UE associations which can be used
+     * for new UE-associated logical NG-connections over the NG interface,
+     * the AMF shall respond with the NG RESET ACKNOWLEDGE message.
      */
-#if 0
-    ngap_send_ng_reset_ack(gnb, partOfNG_Interface);
-#endif
+    ngap_send_ng_reset_ack(gnb, NULL);
 }

@@ -2115,22 +2115,8 @@ void s1ap_handle_s1_reset(
             OGS_ADDR(enb->sctp.addr, buf), enb->enb_id);
 
     ogs_assert(Cause);
-    ogs_debug("    Cause[Group:%d Cause:%d]",
+    ogs_warn("    Cause[Group:%d Cause:%d]",
             Cause->present, (int)Cause->choice.radioNetwork);
-
-    switch (Cause->present) {
-    case S1AP_Cause_PR_radioNetwork:
-    case S1AP_Cause_PR_transport:
-    case S1AP_Cause_PR_protocol:
-    case S1AP_Cause_PR_misc:
-        break;
-    case S1AP_Cause_PR_nas:
-        ogs_warn("NAS-Cause[%d]", (int)Cause->choice.nas);
-        break;
-    default:
-        ogs_warn("Invalid cause group[%d]", Cause->present);
-        break;
-    }
 
     ogs_assert(ResetType);
     switch (ResetType->present) {
