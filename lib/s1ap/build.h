@@ -37,8 +37,8 @@ ogs_pkbuf_t *ogs_s1ap_build_s1_reset(
     S1AP_Cause_PR group, long cause,
     S1AP_UE_associatedLogicalS1_ConnectionListRes_t *partOfS1_Interface);
 
-void ogs_s1ap_add_enb_ue_to_s1_reset(
-    S1AP_UE_associatedLogicalS1_ConnectionListRes_t *partOfS1_Interface,
+void ogs_s1ap_build_s1_reset_partial(
+    S1AP_UE_associatedLogicalS1_ConnectionListRes_t **list,
     uint32_t *mme_ue_s1ap_id,
     uint32_t *enb_ue_s1ap_id);
 

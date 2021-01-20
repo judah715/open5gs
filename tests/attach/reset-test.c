@@ -300,12 +300,10 @@ static void test1_func(abts_case *tc, void *data)
     tests1ap_recv(test_ue, recvbuf);
 
     /* Send S1-Reset */
-    partOfS1_Interface = CALLOC(1,
-            sizeof(S1AP_UE_associatedLogicalS1_ConnectionListRes_t));
-    ogs_assert(partOfS1_Interface);
+    partOfS1_Interface = NULL;
 
-    ogs_s1ap_add_enb_ue_to_s1_reset(
-            partOfS1_Interface,
+    ogs_s1ap_build_s1_reset_partial(
+            &partOfS1_Interface,
             &test_ue->mme_ue_s1ap_id, &test_ue->enb_ue_s1ap_id);
 
     sendbuf = ogs_s1ap_build_s1_reset(
@@ -625,15 +623,13 @@ static void test2_func(abts_case *tc, void *data)
 
     /* Send S1-Reset */
     uint32_t a = 5, b = 4;
-    partOfS1_Interface = CALLOC(1,
-            sizeof(S1AP_UE_associatedLogicalS1_ConnectionListRes_t));
-    ogs_assert(partOfS1_Interface);
+    partOfS1_Interface = NULL;
 
-    ogs_s1ap_add_enb_ue_to_s1_reset(
-            partOfS1_Interface,
+    ogs_s1ap_build_s1_reset_partial(
+            &partOfS1_Interface,
             &test_ue->mme_ue_s1ap_id, &test_ue->enb_ue_s1ap_id);
-    ogs_s1ap_add_enb_ue_to_s1_reset(
-            partOfS1_Interface,
+    ogs_s1ap_build_s1_reset_partial(
+            &partOfS1_Interface,
             &a, &b);
 
     sendbuf = ogs_s1ap_build_s1_reset(

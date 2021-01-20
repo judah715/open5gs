@@ -154,16 +154,22 @@ ogs_pkbuf_t *ogs_s1ap_build_s1_reset(
     return ogs_s1ap_encode(&pdu);
 }
 
-void ogs_s1ap_add_enb_ue_to_s1_reset(
-    S1AP_UE_associatedLogicalS1_ConnectionListRes_t *partOfS1_Interface,
+void ogs_s1ap_build_s1_reset_partial(
+    S1AP_UE_associatedLogicalS1_ConnectionListRes_t **list,
     uint32_t *mme_ue_s1ap_id,
     uint32_t *enb_ue_s1ap_id)
 {
+    S1AP_UE_associatedLogicalS1_ConnectionListRes_t *partOfS1_Interface = NULL;
     S1AP_UE_associatedLogicalS1_ConnectionItemRes_t *ie = NULL;
     S1AP_UE_associatedLogicalS1_ConnectionItem_t *item = NULL;
 
-    ogs_assert(partOfS1_Interface);
+    ogs_assert(list);
     ogs_assert(mme_ue_s1ap_id || enb_ue_s1ap_id);
+
+    if (!*list) *list = CALLOC(1, sizeof(**list));
+
+    partOfS1_Interface = *list;
+    ogs_assert(partOfS1_Interface);
 
     ie = CALLOC(1, sizeof(S1AP_UE_associatedLogicalS1_ConnectionItemRes_t));
     ASN_SEQUENCE_ADD(&partOfS1_Interface->list, ie);
