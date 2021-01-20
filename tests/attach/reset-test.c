@@ -319,32 +319,20 @@ static void test1_func(abts_case *tc, void *data)
     ABTS_PTR_NOTNULL(tc, recvbuf);
     ogs_pkbuf_free(recvbuf);
 
-    /* Send Service Request - INVALID M-TMSI */
-    test_ue->nas_eps_guti.m_tmsi = 0x1234;
-
-    emmbuf = testemm_build_service_request(test_ue);
-    ABTS_PTR_NOTNULL(tc, emmbuf);
-    sendbuf = test_s1ap_build_initial_ue_message(
-            test_ue, emmbuf, S1AP_RRC_Establishment_Cause_mo_Data, true);
+    /* Send UE Context Release Request */
+    sendbuf = test_s1ap_build_ue_context_release_request(test_ue,
+            S1AP_Cause_PR_radioNetwork, S1AP_CauseRadioNetwork_user_inactivity);
     ABTS_PTR_NOTNULL(tc, sendbuf);
     rv = testenb_s1ap_send(s1ap, sendbuf);
     ABTS_INT_EQUAL(tc, OGS_OK, rv);
-
-    /* Receive Service reject */
-    recvbuf = testenb_s1ap_read(s1ap);
-    ABTS_PTR_NOTNULL(tc, recvbuf);
-    tests1ap_recv(test_ue, recvbuf);
 
     /* Receive UE Context Release Command */
     recvbuf = testenb_s1ap_read(s1ap);
     ABTS_PTR_NOTNULL(tc, recvbuf);
     tests1ap_recv(test_ue, recvbuf);
-
-    /* Send UE Context Release Complete */
-    sendbuf = test_s1ap_build_ue_context_release_complete(test_ue);
-    ABTS_PTR_NOTNULL(tc, sendbuf);
-    rv = testenb_s1ap_send(s1ap, sendbuf);
-    ABTS_INT_EQUAL(tc, OGS_OK, rv);
+    ABTS_INT_EQUAL(tc,
+            S1AP_ProcedureCode_id_ErrorIndication,
+            test_ue->s1ap_procedure_code);
 
     ogs_msleep(300);
 
@@ -382,8 +370,6 @@ static void test2_func(abts_case *tc, void *data)
     test_ue_t *test_ue[NUM_OF_TEST_UE];
     test_sess_t *sess = NULL;
     test_bearer_t *bearer = NULL;
-
-    S1AP_UE_associatedLogicalS1_ConnectionListRes_t *partOfS1_Interface = NULL;
 
     const char *_k_string = "465b5ce8b199b49faa5f0a2ee238a6bc";
     uint8_t k[OGS_KEY_LEN];
@@ -719,11 +705,10 @@ static void test2_func(abts_case *tc, void *data)
     }
 
     /* Send S1-Reset */
-    partOfS1_Interface = NULL;
     sendbuf = ogs_s1ap_build_s1_reset(
             S1AP_Cause_PR_radioNetwork,
             S1AP_CauseRadioNetwork_release_due_to_eutran_generated_reason,
-            partOfS1_Interface);
+            NULL);
 
     rv = testenb_s1ap_send(s1ap, sendbuf);
     ABTS_INT_EQUAL(tc, OGS_OK, rv);
@@ -1122,6 +1107,20 @@ static void test3_func(abts_case *tc, void *data)
             S1AP_Cause_PR_radioNetwork,
             S1AP_CauseRadioNetwork_release_due_to_eutran_generated_reason,
             partOfS1_Interface);
+
+    rv = testenb_s1ap_send(s1ap, sendbuf);
+    ABTS_INT_EQUAL(tc, OGS_OK, rv);
+
+    /* Receive S1-Reset Acknowledge */
+    recvbuf = testenb_s1ap_read(s1ap);
+    ABTS_PTR_NOTNULL(tc, recvbuf);
+    ogs_pkbuf_free(recvbuf);
+
+    /* Send S1-Reset */
+    sendbuf = ogs_s1ap_build_s1_reset(
+            S1AP_Cause_PR_radioNetwork,
+            S1AP_CauseRadioNetwork_release_due_to_eutran_generated_reason,
+            NULL);
 
     rv = testenb_s1ap_send(s1ap, sendbuf);
     ABTS_INT_EQUAL(tc, OGS_OK, rv);
