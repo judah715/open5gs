@@ -264,6 +264,8 @@ struct enb_ue_s {
 #define S1AP_UE_CTX_REL_S1_PAGING                           5
     uint8_t         ue_ctx_rel_action;
 
+    bool            part_of_s1_reset_requested;
+
     /* Related Context */
     mme_enb_t       *enb;
     mme_ue_t        *mme_ue;

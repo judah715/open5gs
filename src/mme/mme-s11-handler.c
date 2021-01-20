@@ -777,8 +777,7 @@ void mme_s11_handle_release_access_bearers_response(
         } else {
             ogs_warn("ENB-S1 Context has already been removed");
         }
-    } else if (action == OGS_GTP_RELEASE_S1_CONTEXT_REMOVE_BY_LO_CONNREFUSED ||
-                action == OGS_GTP_RELEASE_S1_CONTEXT_REMOVE_BY_RESET_PARTIAL) {
+    } else if (action == OGS_GTP_RELEASE_S1_CONTEXT_REMOVE_BY_LO_CONNREFUSED) {
         enb_ue = enb_ue_cycle(mme_ue->enb_ue);
         if (enb_ue) {
             enb_ue_remove(enb_ue);
@@ -786,13 +785,6 @@ void mme_s11_handle_release_access_bearers_response(
             ogs_warn("ENB-S1 Context has already been removed");
         }
         mme_ue_deassociate(mme_ue);
-    } else if (action == OGS_GTP_RELEASE_S1_CONTEXT_REMOVE_BY_RESET_ALL) {
-        enb_ue = enb_ue_cycle(mme_ue->enb_ue);
-        if (enb_ue) {
-            mme_enb_t *enb = enb_ue->enb;
-            ogs_assert(enb);
-
-            enb_ue_remove(enb_ue);
 
     /*
      * TS36.413
@@ -807,8 +799,41 @@ void mme_s11_handle_release_access_bearers_response(
      * for new UE-associated logical S1-connections over the S1 interface,
      * the MME shall respond with the RESET ACKNOWLEDGE message.
      */
+    } else if (action == OGS_GTP_RELEASE_S1_CONTEXT_REMOVE_BY_RESET_ALL) {
+        enb_ue = enb_ue_cycle(mme_ue->enb_ue);
+        if (enb_ue) {
+            mme_enb_t *enb = enb_ue->enb;
+            ogs_assert(enb);
+
+            enb_ue_remove(enb_ue);
+
             if (ogs_list_count(&enb->enb_ue_list) == 0)
                 s1ap_send_s1_reset_ack(enb, NULL);
+        } else {
+            ogs_warn("ENB-S1 Context has already been removed");
+        }
+        mme_ue_deassociate(mme_ue);
+    } else if (action == OGS_GTP_RELEASE_S1_CONTEXT_REMOVE_BY_RESET_PARTIAL) {
+        enb_ue = enb_ue_cycle(mme_ue->enb_ue);
+        if (enb_ue) {
+            mme_enb_t *enb = enb_ue->enb;
+            enb_ue_t *iter = NULL;
+            ogs_assert(enb);
+
+            enb_ue_remove(enb_ue);
+
+            ogs_list_for_each(&enb->enb_ue_list, iter) {
+                if (iter->part_of_s1_reset_requested == true) {
+                    /* The ENB_UE context
+                     * where PartOfS1_interface was requested
+                     * still remains */
+                    return;
+                }
+            }
+
+            /* All ENB_UE context
+             * where PartOfS1_interface was requested
+             * REMOVED */
         } else {
             ogs_warn("ENB-S1 Context has already been removed");
         }

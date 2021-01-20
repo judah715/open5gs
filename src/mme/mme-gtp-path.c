@@ -446,11 +446,7 @@ void mme_gtp_send_release_all_ue_in_enb(mme_enb_t *enb, int action)
             ogs_warn("    ENB_UE_S1AP_ID[%d] MME_UE_S1AP_ID[%d] Action[%d]",
                 enb_ue->enb_ue_s1ap_id, enb_ue->mme_ue_s1ap_id, action);
 
-            if (action == OGS_GTP_RELEASE_S1_CONTEXT_REMOVE_BY_LO_CONNREFUSED ||
-                action == OGS_GTP_RELEASE_S1_CONTEXT_REMOVE_BY_RESET_PARTIAL) {
-                enb_ue_remove(enb_ue);
-            } else if (action ==
-                    OGS_GTP_RELEASE_S1_CONTEXT_REMOVE_BY_RESET_ALL) {
+            if (action == OGS_GTP_RELEASE_S1_CONTEXT_REMOVE_BY_LO_CONNREFUSED) {
                 enb_ue_remove(enb_ue);
 
         /*
@@ -466,9 +462,18 @@ void mme_gtp_send_release_all_ue_in_enb(mme_enb_t *enb, int action)
          * for new UE-associated logical S1-connections over the S1 interface,
          * the MME shall respond with the RESET ACKNOWLEDGE message.
          */
+            } else if (action ==
+                    OGS_GTP_RELEASE_S1_CONTEXT_REMOVE_BY_RESET_ALL) {
+                enb_ue_remove(enb_ue);
+
                 ogs_assert(enb);
                 if (ogs_list_count(&enb->enb_ue_list) == 0)
                     s1ap_send_s1_reset_ack(enb, NULL);
+            } else if (action ==
+                    OGS_GTP_RELEASE_S1_CONTEXT_REMOVE_BY_RESET_PARTIAL) {
+                enb_ue_remove(enb_ue);
+
+                ogs_assert(enb);
             } else {
                 /* At this point, it does not support other action */
                 ogs_assert_if_reached();
