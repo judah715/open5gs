@@ -368,7 +368,8 @@ static void test1_func(abts_case *tc, void *data)
 
 static void test2_func(abts_case *tc, void *data)
 {
-    int rv;
+#define NUM_OF_TEST_UE 3
+    int rv, i;
     ogs_socknode_t *s1ap;
     ogs_socknode_t *gtpu;
     ogs_pkbuf_t *emmbuf;
@@ -378,7 +379,7 @@ static void test2_func(abts_case *tc, void *data)
     ogs_s1ap_message_t message;
 
     ogs_nas_5gs_mobile_identity_suci_t mobile_identity_suci;
-    test_ue_t *test_ue = NULL;
+    test_ue_t *test_ue[NUM_OF_TEST_UE];
     test_sess_t *sess = NULL;
     test_bearer_t *bearer = NULL;
 
@@ -393,7 +394,7 @@ static void test2_func(abts_case *tc, void *data)
     bson_t *doc = NULL;
     int64_t count = 0;
     bson_error_t error;
-    const char *json =
+    const char *json[NUM_OF_TEST_UE] = {
       "{"
         "\"_id\" : { \"$oid\" : \"310014158b8861d7605378c6\" }, "
         "\"imsi\" : \"901707364000060\", "
@@ -431,37 +432,89 @@ static void test2_func(abts_case *tc, void *data)
           "\"sqn\" : { \"$numberLong\" : \"64\" } "
         "}, "
         "\"__v\" : 0 "
-      "}";
+      "}",
+      "{"
+        "\"_id\" : { \"$oid\" : \"310014158b8861d7605378c7\" }, "
+        "\"imsi\" : \"901707364000061\", "
+        "\"pdn\" : ["
+          "{"
+            "\"apn\" : \"internet\", "
+            "\"_id\" : { \"$oid\" : \"310014158b8861d7605378c8\" }, "
+            "\"ambr\" : {"
+              "\"uplink\" : { \"$numberLong\" : \"1000000\" }, "
+              "\"downlink\" : { \"$numberLong\" : \"1000000\" } "
+            "},"
+            "\"qos\" : { "
+              "\"qci\" : 9, "
+              "\"arp\" : { "
+                "\"priority_level\" : 15,"
+                "\"pre_emption_vulnerability\" : 1, "
+                "\"pre_emption_capability\" : 1"
+              "} "
+            "}, "
+            "\"type\" : 2"
+          "}"
+        "],"
+        "\"ambr\" : { "
+          "\"uplink\" : { \"$numberLong\" : \"1000000\" }, "
+          "\"downlink\" : { \"$numberLong\" : \"1000000\" } "
+        "},"
+        "\"subscribed_rau_tau_timer\" : 12,"
+        "\"network_access_mode\" : 2, "
+        "\"subscriber_status\" : 0, "
+        "\"access_restriction_data\" : 32, "
+        "\"security\" : { "
+          "\"k\" : \"465B5CE8 B199B49F AA5F0A2E E238A6BC\", "
+          "\"opc\" : \"E8ED289D EBA952E4 283B54E8 8E6183CA\", "
+          "\"amf\" : \"8000\", "
+          "\"sqn\" : { \"$numberLong\" : \"64\" } "
+        "}, "
+        "\"__v\" : 0 "
+      "}",
+      "{"
+        "\"_id\" : { \"$oid\" : \"310014158b8861d7605378c8\" }, "
+        "\"imsi\" : \"901707364000062\", "
+        "\"pdn\" : ["
+          "{"
+            "\"apn\" : \"internet\", "
+            "\"_id\" : { \"$oid\" : \"310014158b8861d7605378c9\" }, "
+            "\"ambr\" : {"
+              "\"uplink\" : { \"$numberLong\" : \"1000000\" }, "
+              "\"downlink\" : { \"$numberLong\" : \"1000000\" } "
+            "},"
+            "\"qos\" : { "
+              "\"qci\" : 9, "
+              "\"arp\" : { "
+                "\"priority_level\" : 15,"
+                "\"pre_emption_vulnerability\" : 1, "
+                "\"pre_emption_capability\" : 1"
+              "} "
+            "}, "
+            "\"type\" : 2"
+          "}"
+        "],"
+        "\"ambr\" : { "
+          "\"uplink\" : { \"$numberLong\" : \"1000000\" }, "
+          "\"downlink\" : { \"$numberLong\" : \"1000000\" } "
+        "},"
+        "\"subscribed_rau_tau_timer\" : 12,"
+        "\"network_access_mode\" : 2, "
+        "\"subscriber_status\" : 0, "
+        "\"access_restriction_data\" : 32, "
+        "\"security\" : { "
+          "\"k\" : \"465B5CE8 B199B49F AA5F0A2E E238A6BC\", "
+          "\"opc\" : \"E8ED289D EBA952E4 283B54E8 8E6183CA\", "
+          "\"amf\" : \"8000\", "
+          "\"sqn\" : { \"$numberLong\" : \"64\" } "
+        "}, "
+        "\"__v\" : 0 "
+      "}",
+    };
 
-    /* Setup Test UE & Session Context */
-    memset(&mobile_identity_suci, 0, sizeof(mobile_identity_suci));
-
-    mobile_identity_suci.h.supi_format = OGS_NAS_5GS_SUPI_FORMAT_IMSI;
-    mobile_identity_suci.h.type = OGS_NAS_5GS_MOBILE_IDENTITY_SUCI;
-    mobile_identity_suci.routing_indicator1 = 0;
-    mobile_identity_suci.routing_indicator2 = 0xf;
-    mobile_identity_suci.routing_indicator3 = 0xf;
-    mobile_identity_suci.routing_indicator4 = 0xf;
-    mobile_identity_suci.protection_scheme_id = OGS_NAS_5GS_NULL_SCHEME;
-    mobile_identity_suci.home_network_pki_value = 0;
-    mobile_identity_suci.scheme_output[0] = 0x37;
-    mobile_identity_suci.scheme_output[1] = 0x46;
-    mobile_identity_suci.scheme_output[2] = 0;
-    mobile_identity_suci.scheme_output[3] = 0;
-    mobile_identity_suci.scheme_output[4] = 0x06;
-
-    test_ue = test_ue_add_by_suci(&mobile_identity_suci, 13);
-    ogs_assert(test_ue);
-
-    test_ue->e_cgi.cell_id = 0x54f6401;
-    test_ue->nas.ksi = OGS_NAS_KSI_NO_KEY_IS_AVAILABLE;
-    test_ue->nas.value = OGS_NAS_ATTACH_TYPE_COMBINED_EPS_IMSI_ATTACH;
-
-    OGS_HEX(_k_string, strlen(_k_string), test_ue->k);
-    OGS_HEX(_opc_string, strlen(_opc_string), test_ue->opc);
-
-    sess = test_sess_add_by_apn(test_ue, "internet");
-    ogs_assert(sess);
+    /* Get DB collection */
+    collection = mongoc_client_get_collection(
+        ogs_mongoc()->client, ogs_mongoc()->name, "subscribers");
+    ABTS_PTR_NOTNULL(tc, collection);
 
     /* eNB connects to MME */
     s1ap = tests1ap_client(AF_INET);
@@ -483,155 +536,190 @@ static void test2_func(abts_case *tc, void *data)
     ABTS_PTR_NOTNULL(tc, recvbuf);
     tests1ap_recv(NULL, recvbuf);
 
-    /********** Insert Subscriber in Database */
-    collection = mongoc_client_get_collection(
-        ogs_mongoc()->client, ogs_mongoc()->name, "subscribers");
-    ABTS_PTR_NOTNULL(tc, collection);
-    doc = BCON_NEW("imsi", BCON_UTF8(test_ue->imsi));
-    ABTS_PTR_NOTNULL(tc, doc);
+    for (i = 0; i < 3; i++) {
+        /* Setup Test UE & Session Context */
+        memset(&mobile_identity_suci, 0, sizeof(mobile_identity_suci));
 
-    count = mongoc_collection_count (
-        collection, MONGOC_QUERY_NONE, doc, 0, 0, NULL, &error);
-    if (count) {
-        ABTS_TRUE(tc, mongoc_collection_remove(collection,
-                MONGOC_REMOVE_SINGLE_REMOVE, doc, NULL, &error))
-    }
-    bson_destroy(doc);
+        mobile_identity_suci.h.supi_format = OGS_NAS_5GS_SUPI_FORMAT_IMSI;
+        mobile_identity_suci.h.type = OGS_NAS_5GS_MOBILE_IDENTITY_SUCI;
+        mobile_identity_suci.routing_indicator1 = 0;
+        mobile_identity_suci.routing_indicator2 = 0xf;
+        mobile_identity_suci.routing_indicator3 = 0xf;
+        mobile_identity_suci.routing_indicator4 = 0xf;
+        mobile_identity_suci.protection_scheme_id = OGS_NAS_5GS_NULL_SCHEME;
+        mobile_identity_suci.home_network_pki_value = 0;
+        mobile_identity_suci.scheme_output[0] = 0x37;
+        mobile_identity_suci.scheme_output[1] = 0x46;
+        mobile_identity_suci.scheme_output[2] = 0;
+        mobile_identity_suci.scheme_output[3] = 0;
+        /* Multiple IMSI */
+        if (i == 0)
+            mobile_identity_suci.scheme_output[4] = 0x06;
+        else if (i == 1)
+            mobile_identity_suci.scheme_output[4] = 0x16;
+        else if (i == 2)
+            mobile_identity_suci.scheme_output[4] = 0x26;
+        else
+            ogs_assert_if_reached();
 
-    doc = bson_new_from_json((const uint8_t *)json, -1, &error);;
-    ABTS_PTR_NOTNULL(tc, doc);
-    ABTS_TRUE(tc, mongoc_collection_insert(collection,
-                MONGOC_INSERT_NONE, doc, NULL, &error));
-    bson_destroy(doc);
+        test_ue[i] = test_ue_add_by_suci(&mobile_identity_suci, 13);
+        ogs_assert(test_ue[i]);
 
-    doc = BCON_NEW("imsi", BCON_UTF8(test_ue->imsi));
-    ABTS_PTR_NOTNULL(tc, doc);
-    do {
+        /* Multiple eNB-UE-S1AP-UD */
+        test_ue[i]->enb_ue_s1ap_id = i;
+
+        test_ue[i]->e_cgi.cell_id = 0x54f6401;
+        test_ue[i]->nas.ksi = OGS_NAS_KSI_NO_KEY_IS_AVAILABLE;
+        test_ue[i]->nas.value = OGS_NAS_ATTACH_TYPE_COMBINED_EPS_IMSI_ATTACH;
+
+        OGS_HEX(_k_string, strlen(_k_string), test_ue[i]->k);
+        OGS_HEX(_opc_string, strlen(_opc_string), test_ue[i]->opc);
+
+        sess = test_sess_add_by_apn(test_ue[i], "internet");
+        ogs_assert(sess);
+
+        /********** Insert Subscriber in Database */
+        doc = BCON_NEW("imsi", BCON_UTF8(test_ue[i]->imsi));
+        ABTS_PTR_NOTNULL(tc, doc);
+
         count = mongoc_collection_count (
             collection, MONGOC_QUERY_NONE, doc, 0, 0, NULL, &error);
-    } while (count == 0);
-    bson_destroy(doc);
+        if (count) {
+            ABTS_TRUE(tc, mongoc_collection_remove(collection,
+                    MONGOC_REMOVE_SINGLE_REMOVE, doc, NULL, &error))
+        }
+        bson_destroy(doc);
 
-    collection = mongoc_client_get_collection(
-        ogs_mongoc()->client, ogs_mongoc()->name, "subscribers");
-    ABTS_PTR_NOTNULL(tc, collection);
+        doc = bson_new_from_json((const uint8_t *)json[i], -1, &error);;
+        ABTS_PTR_NOTNULL(tc, doc);
+        ABTS_TRUE(tc, mongoc_collection_insert(collection,
+                    MONGOC_INSERT_NONE, doc, NULL, &error));
+        bson_destroy(doc);
 
-    /* Send Attach Request */
-    memset(&sess->pdn_connectivity_param,
-            0, sizeof(sess->pdn_connectivity_param));
-    sess->pdn_connectivity_param.eit = 1;
-    sess->pdn_connectivity_param.pco = 1;
-    esmbuf = testesm_build_pdn_connectivity_request(sess);
-    ABTS_PTR_NOTNULL(tc, esmbuf);
+        doc = BCON_NEW("imsi", BCON_UTF8(test_ue[i]->imsi));
+        ABTS_PTR_NOTNULL(tc, doc);
+        do {
+            count = mongoc_collection_count (
+                collection, MONGOC_QUERY_NONE, doc, 0, 0, NULL, &error);
+        } while (count == 0);
+        bson_destroy(doc);
+    }
 
-    memset(&test_ue->attach_request_param,
-            0, sizeof(test_ue->attach_request_param));
-    test_ue->attach_request_param.drx_parameter = 1;
-    test_ue->attach_request_param.ms_network_capability = 1;
-    test_ue->attach_request_param.tmsi_status = 1;
-    test_ue->attach_request_param.mobile_station_classmark_2 = 1;
-    test_ue->attach_request_param.supported_codecs = 1;
-    test_ue->attach_request_param.ue_usage_setting = 1;
-    test_ue->attach_request_param.ms_network_feature_support = 1;
-    emmbuf = testemm_build_attach_request(test_ue, esmbuf);
-    ABTS_PTR_NOTNULL(tc, emmbuf);
+    for (i = 0; i < 3; i++) {
+        sess = test_sess_find_by_apn(test_ue[i], "internet");
+        ogs_assert(sess);
 
-    memset(&test_ue->initial_ue_param, 0, sizeof(test_ue->initial_ue_param));
-    sendbuf = test_s1ap_build_initial_ue_message(
-            test_ue, emmbuf, S1AP_RRC_Establishment_Cause_mo_Signalling, false);
-    ABTS_INT_EQUAL(tc, OGS_OK, rv);
-    rv = testenb_s1ap_send(s1ap, sendbuf);
-    ABTS_INT_EQUAL(tc, OGS_OK, rv);
+        /* Send Attach Request */
+        memset(&sess->pdn_connectivity_param,
+                0, sizeof(sess->pdn_connectivity_param));
+        sess->pdn_connectivity_param.eit = 1;
+        sess->pdn_connectivity_param.pco = 1;
+        esmbuf = testesm_build_pdn_connectivity_request(sess);
+        ABTS_PTR_NOTNULL(tc, esmbuf);
 
-    /* Receive Authentication Request */
-    recvbuf = testenb_s1ap_read(s1ap);
-    ABTS_PTR_NOTNULL(tc, recvbuf);
-    tests1ap_recv(test_ue, recvbuf);
+        memset(&test_ue[i]->attach_request_param,
+                0, sizeof(test_ue[i]->attach_request_param));
+        test_ue[i]->attach_request_param.drx_parameter = 1;
+        test_ue[i]->attach_request_param.ms_network_capability = 1;
+        test_ue[i]->attach_request_param.tmsi_status = 1;
+        test_ue[i]->attach_request_param.mobile_station_classmark_2 = 1;
+        test_ue[i]->attach_request_param.supported_codecs = 1;
+        test_ue[i]->attach_request_param.ue_usage_setting = 1;
+        test_ue[i]->attach_request_param.ms_network_feature_support = 1;
+        emmbuf = testemm_build_attach_request(test_ue[i], esmbuf);
+        ABTS_PTR_NOTNULL(tc, emmbuf);
 
-    /* Send Authentication response */
-    emmbuf = testemm_build_authentication_response(test_ue);
-    ABTS_PTR_NOTNULL(tc, emmbuf);
-    sendbuf = test_s1ap_build_uplink_nas_transport(test_ue, emmbuf);
-    ABTS_PTR_NOTNULL(tc, sendbuf);
-    rv = testenb_s1ap_send(s1ap, sendbuf);
-    ABTS_INT_EQUAL(tc, OGS_OK, rv);
+        memset(&test_ue[i]->initial_ue_param, 0,
+                sizeof(test_ue[i]->initial_ue_param));
+        sendbuf = test_s1ap_build_initial_ue_message(
+                test_ue[i], emmbuf,
+                S1AP_RRC_Establishment_Cause_mo_Signalling, false);
+        ABTS_INT_EQUAL(tc, OGS_OK, rv);
+        rv = testenb_s1ap_send(s1ap, sendbuf);
+        ABTS_INT_EQUAL(tc, OGS_OK, rv);
 
-    /* Receive Security mode Command */
-    recvbuf = testenb_s1ap_read(s1ap);
-    ABTS_PTR_NOTNULL(tc, recvbuf);
-    tests1ap_recv(test_ue, recvbuf);
+        /* Receive Authentication Request */
+        recvbuf = testenb_s1ap_read(s1ap);
+        ABTS_PTR_NOTNULL(tc, recvbuf);
+        tests1ap_recv(test_ue[i], recvbuf);
 
-    /* Send Security mode complete */
-    test_ue->mobile_identity_imeisv_presence = true;
-    emmbuf = testemm_build_security_mode_complete(test_ue);
-    ABTS_PTR_NOTNULL(tc, emmbuf);
-    sendbuf = test_s1ap_build_uplink_nas_transport(test_ue, emmbuf);
-    ABTS_PTR_NOTNULL(tc, sendbuf);
-    rv = testenb_s1ap_send(s1ap, sendbuf);
-    ABTS_INT_EQUAL(tc, OGS_OK, rv);
+        /* Send Authentication response */
+        emmbuf = testemm_build_authentication_response(test_ue[i]);
+        ABTS_PTR_NOTNULL(tc, emmbuf);
+        sendbuf = test_s1ap_build_uplink_nas_transport(test_ue[i], emmbuf);
+        ABTS_PTR_NOTNULL(tc, sendbuf);
+        rv = testenb_s1ap_send(s1ap, sendbuf);
+        ABTS_INT_EQUAL(tc, OGS_OK, rv);
 
-    /* Receive ESM Information Request */
-    recvbuf = testenb_s1ap_read(s1ap);
-    ABTS_PTR_NOTNULL(tc, recvbuf);
-    tests1ap_recv(test_ue, recvbuf);
+        /* Receive Security mode Command */
+        recvbuf = testenb_s1ap_read(s1ap);
+        ABTS_PTR_NOTNULL(tc, recvbuf);
+        tests1ap_recv(test_ue[i], recvbuf);
 
-    /* Send ESM Information Response */
-    esmbuf = testesm_build_esm_information_response(sess);
-    ABTS_PTR_NOTNULL(tc, esmbuf);
-    sendbuf = test_s1ap_build_uplink_nas_transport(test_ue, esmbuf);
-    ABTS_PTR_NOTNULL(tc, sendbuf);
-    rv = testenb_s1ap_send(s1ap, sendbuf);
-    ABTS_INT_EQUAL(tc, OGS_OK, rv);
+        /* Send Security mode complete */
+        test_ue[i]->mobile_identity_imeisv_presence = true;
+        emmbuf = testemm_build_security_mode_complete(test_ue[i]);
+        ABTS_PTR_NOTNULL(tc, emmbuf);
+        sendbuf = test_s1ap_build_uplink_nas_transport(test_ue[i], emmbuf);
+        ABTS_PTR_NOTNULL(tc, sendbuf);
+        rv = testenb_s1ap_send(s1ap, sendbuf);
+        ABTS_INT_EQUAL(tc, OGS_OK, rv);
 
-    /* Receive Initial Context Setup Request +
-     * Attach Accept +
-     * Activate Default Bearer Context Request */
-    recvbuf = testenb_s1ap_read(s1ap);
-    ABTS_PTR_NOTNULL(tc, recvbuf);
-    tests1ap_recv(test_ue, recvbuf);
+        /* Receive ESM Information Request */
+        recvbuf = testenb_s1ap_read(s1ap);
+        ABTS_PTR_NOTNULL(tc, recvbuf);
+        tests1ap_recv(test_ue[i], recvbuf);
 
-    /* Send UE Capability Info Indication */
-    sendbuf = tests1ap_build_ue_radio_capability_info_indication(test_ue);
-    ABTS_PTR_NOTNULL(tc, sendbuf);
-    rv = testenb_s1ap_send(s1ap, sendbuf);
-    ABTS_INT_EQUAL(tc, OGS_OK, rv);
+        /* Send ESM Information Response */
+        esmbuf = testesm_build_esm_information_response(sess);
+        ABTS_PTR_NOTNULL(tc, esmbuf);
+        sendbuf = test_s1ap_build_uplink_nas_transport(test_ue[i], esmbuf);
+        ABTS_PTR_NOTNULL(tc, sendbuf);
+        rv = testenb_s1ap_send(s1ap, sendbuf);
+        ABTS_INT_EQUAL(tc, OGS_OK, rv);
 
-    /* Send Initial Context Setup Response */
-    sendbuf = test_s1ap_build_initial_context_setup_response(test_ue);
-    ABTS_PTR_NOTNULL(tc, sendbuf);
-    rv = testenb_s1ap_send(s1ap, sendbuf);
-    ABTS_INT_EQUAL(tc, OGS_OK, rv);
+        /* Receive Initial Context Setup Request +
+         * Attach Accept +
+         * Activate Default Bearer Context Request */
+        recvbuf = testenb_s1ap_read(s1ap);
+        ABTS_PTR_NOTNULL(tc, recvbuf);
+        tests1ap_recv(test_ue[i], recvbuf);
 
-    /* Send Attach Complete + Activate default EPS bearer cotext accept */
-    test_ue->nr_cgi.cell_id = 0x1234502;
-    bearer = test_bearer_find_by_ue_ebi(test_ue, 5);
-    ogs_assert(bearer);
-    esmbuf = testesm_build_activate_default_eps_bearer_context_accept(
-            bearer, false);
-    ABTS_PTR_NOTNULL(tc, esmbuf);
-    emmbuf = testemm_build_attach_complete(test_ue, esmbuf);
-    ABTS_PTR_NOTNULL(tc, emmbuf);
-    sendbuf = test_s1ap_build_uplink_nas_transport(test_ue, emmbuf);
-    ABTS_PTR_NOTNULL(tc, sendbuf);
-    rv = testenb_s1ap_send(s1ap, sendbuf);
-    ABTS_INT_EQUAL(tc, OGS_OK, rv);
+        /* Send UE Capability Info Indication */
+        sendbuf =
+            tests1ap_build_ue_radio_capability_info_indication(test_ue[i]);
+        ABTS_PTR_NOTNULL(tc, sendbuf);
+        rv = testenb_s1ap_send(s1ap, sendbuf);
+        ABTS_INT_EQUAL(tc, OGS_OK, rv);
 
-    /* Receive EMM information */
-    recvbuf = testenb_s1ap_read(s1ap);
-    ABTS_PTR_NOTNULL(tc, recvbuf);
-    tests1ap_recv(test_ue, recvbuf);
+        /* Send Initial Context Setup Response */
+        sendbuf = test_s1ap_build_initial_context_setup_response(test_ue[i]);
+        ABTS_PTR_NOTNULL(tc, sendbuf);
+        rv = testenb_s1ap_send(s1ap, sendbuf);
+        ABTS_INT_EQUAL(tc, OGS_OK, rv);
+
+        /* Send Attach Complete + Activate default EPS bearer cotext accept */
+        test_ue[i]->nr_cgi.cell_id = 0x1234502;
+        bearer = test_bearer_find_by_ue_ebi(test_ue[i], 5);
+        ogs_assert(bearer);
+        esmbuf = testesm_build_activate_default_eps_bearer_context_accept(
+                bearer, false);
+        ABTS_PTR_NOTNULL(tc, esmbuf);
+        emmbuf = testemm_build_attach_complete(test_ue[i], esmbuf);
+        ABTS_PTR_NOTNULL(tc, emmbuf);
+        sendbuf = test_s1ap_build_uplink_nas_transport(test_ue[i], emmbuf);
+        ABTS_PTR_NOTNULL(tc, sendbuf);
+        rv = testenb_s1ap_send(s1ap, sendbuf);
+        ABTS_INT_EQUAL(tc, OGS_OK, rv);
+
+        /* Receive EMM information */
+        recvbuf = testenb_s1ap_read(s1ap);
+        ABTS_PTR_NOTNULL(tc, recvbuf);
+        tests1ap_recv(test_ue[i], recvbuf);
+    }
 
     /* Send S1-Reset */
-    uint32_t a = 5, b = 4;
     partOfS1_Interface = NULL;
-
-    ogs_s1ap_build_s1_reset_partial(
-            &partOfS1_Interface,
-            &test_ue->mme_ue_s1ap_id, &test_ue->enb_ue_s1ap_id);
-    ogs_s1ap_build_s1_reset_partial(
-            &partOfS1_Interface,
-            &a, &b);
-
     sendbuf = ogs_s1ap_build_s1_reset(
             S1AP_Cause_PR_radioNetwork,
             S1AP_CauseRadioNetwork_release_due_to_eutran_generated_reason,
@@ -643,16 +731,47 @@ static void test2_func(abts_case *tc, void *data)
     /* Receive S1-Reset Acknowledge */
     recvbuf = testenb_s1ap_read(s1ap);
     ABTS_PTR_NOTNULL(tc, recvbuf);
-    tests1ap_recv(test_ue, recvbuf);
+    tests1ap_recv(test_ue[i], recvbuf);
 
-    /********** Remove Subscriber in Database */
-    doc = BCON_NEW("imsi", BCON_UTF8(test_ue->imsi));
-    ABTS_PTR_NOTNULL(tc, doc);
-    ABTS_TRUE(tc, mongoc_collection_remove(collection,
-            MONGOC_REMOVE_SINGLE_REMOVE, doc, NULL, &error))
-    bson_destroy(doc);
+#if 0
+        /* Send S1-Reset */
+        uint32_t a = 5, b = 4;
+        partOfS1_Interface = NULL;
 
-    mongoc_collection_destroy(collection);
+        ogs_s1ap_build_s1_reset_partial(
+                &partOfS1_Interface,
+                &test_ue[i]->mme_ue_s1ap_id, &test_ue[i]->enb_ue_s1ap_id);
+        ogs_s1ap_build_s1_reset_partial(
+                &partOfS1_Interface,
+                &a, &b);
+
+        sendbuf = ogs_s1ap_build_s1_reset(
+                S1AP_Cause_PR_radioNetwork,
+                S1AP_CauseRadioNetwork_release_due_to_eutran_generated_reason,
+                partOfS1_Interface);
+
+        rv = testenb_s1ap_send(s1ap, sendbuf);
+        ABTS_INT_EQUAL(tc, OGS_OK, rv);
+
+        /* Receive S1-Reset Acknowledge */
+        recvbuf = testenb_s1ap_read(s1ap);
+        ABTS_PTR_NOTNULL(tc, recvbuf);
+        tests1ap_recv(test_ue[i], recvbuf);
+#endif
+
+    ogs_msleep(300);
+
+    for (i = 0; i < 3; i++) {
+        /********** Remove Subscriber in Database */
+        doc = BCON_NEW("imsi", BCON_UTF8(test_ue[i]->imsi));
+        ABTS_PTR_NOTNULL(tc, doc);
+        ABTS_TRUE(tc, mongoc_collection_remove(collection,
+                MONGOC_REMOVE_SINGLE_REMOVE, doc, NULL, &error))
+        bson_destroy(doc);
+    }
+
+    for (i = 0; i < 3; i++)
+        test_ue_remove(test_ue[i]);
 
     /* eNB disonncect from MME */
     testenb_s1ap_close(s1ap);
@@ -660,7 +779,8 @@ static void test2_func(abts_case *tc, void *data)
     /* eNB disonncect from SGW */
     test_gtpu_close(gtpu);
 
-    test_ue_remove(test_ue);
+    /* Destroy DB collection */
+    mongoc_collection_destroy(collection);
 }
 
 abts_suite *test_reset(abts_suite *suite)
