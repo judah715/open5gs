@@ -672,7 +672,7 @@ static void test2_func(abts_case *tc, void *data)
     partOfNG_Interface = CALLOC(1, sizeof(*partOfNG_Interface));
     ogs_assert(partOfNG_Interface);
 
-    ogs_ngap_add_ran_ue_to_ng_reset(
+    ogs_ngap_build_part_of_ng_interface(
             partOfNG_Interface, &test_ue->ran_ue_ngap_id, NULL);
 
     sendbuf = ogs_ngap_build_ng_reset(

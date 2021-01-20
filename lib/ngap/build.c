@@ -153,14 +153,11 @@ ogs_pkbuf_t *ogs_ngap_build_ng_reset(
     return ogs_ngap_encode(&pdu);
 }
 
-void ogs_ngap_add_ran_ue_to_ng_reset(
+void ogs_ngap_build_part_of_ng_interface(
     NGAP_UE_associatedLogicalNG_connectionList_t *partOfNG_Interface,
-    uint32_t *ran_ue_ngap_id,
-    uint64_t *amf_ue_ngap_id)
+    uint32_t *ran_ue_ngap_id, uint64_t *amf_ue_ngap_id)
 {
     NGAP_UE_associatedLogicalNG_connectionItem_t *item = NULL;
-    NGAP_AMF_UE_NGAP_ID_t *AMF_UE_NGAP_ID = NULL;
-    NGAP_RAN_UE_NGAP_ID_t *RAN_UE_NGAP_ID = NULL;
 
     ogs_assert(partOfNG_Interface);
     ogs_assert(ran_ue_ngap_id || amf_ue_ngap_id);
@@ -169,21 +166,17 @@ void ogs_ngap_add_ran_ue_to_ng_reset(
     ogs_assert(item);
 
     if (amf_ue_ngap_id) {
-        AMF_UE_NGAP_ID = CALLOC(1, sizeof(*AMF_UE_NGAP_ID));
-        ogs_assert(AMF_UE_NGAP_ID);
+        item->aMF_UE_NGAP_ID = CALLOC(1, sizeof(*item->aMF_UE_NGAP_ID));
+        ogs_assert(item->aMF_UE_NGAP_ID);
 
-        asn_uint642INTEGER(AMF_UE_NGAP_ID, *amf_ue_ngap_id);
-
-        item->aMF_UE_NGAP_ID = AMF_UE_NGAP_ID;
+        asn_uint642INTEGER(item->aMF_UE_NGAP_ID, *amf_ue_ngap_id);
     }
 
     if (ran_ue_ngap_id) {
-        RAN_UE_NGAP_ID = CALLOC(1, sizeof(RAN_UE_NGAP_ID));
-        ogs_assert(RAN_UE_NGAP_ID);
+        item->rAN_UE_NGAP_ID = CALLOC(1, sizeof(*item->rAN_UE_NGAP_ID));
+        ogs_assert(item->rAN_UE_NGAP_ID);
 
-        *RAN_UE_NGAP_ID = *ran_ue_ngap_id;
-
-        item->rAN_UE_NGAP_ID = RAN_UE_NGAP_ID;
+        *item->rAN_UE_NGAP_ID = *ran_ue_ngap_id;
     }
 
     ASN_SEQUENCE_ADD(&partOfNG_Interface->list, item);
