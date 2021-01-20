@@ -154,34 +154,6 @@ ogs_pkbuf_t *ogs_s1ap_build_s1_reset(
     return ogs_s1ap_encode(&pdu);
 }
 
-ogs_pkbuf_t *ogs_s1ap_build_s1_reset_partial(
-        S1AP_Cause_PR group, long cause,
-        S1AP_MME_UE_S1AP_ID_t *mme_ue_s1ap_id,
-        S1AP_ENB_UE_S1AP_ID_t *enb_ue_s1ap_id)
-{
-    S1AP_UE_associatedLogicalS1_ConnectionListRes_t *partOfS1_Interface = NULL;
-    S1AP_UE_associatedLogicalS1_ConnectionItemRes_t *ie2 = NULL;
-    S1AP_UE_associatedLogicalS1_ConnectionItem_t *item = NULL;
-
-    partOfS1_Interface = CALLOC(1,
-            sizeof(S1AP_UE_associatedLogicalS1_ConnectionListRes_t));
-    ogs_assert(partOfS1_Interface);
-
-    ie2 = CALLOC(1,
-            sizeof(S1AP_UE_associatedLogicalS1_ConnectionItemRes_t));
-    ASN_SEQUENCE_ADD(&partOfS1_Interface->list, ie2);
-
-    ie2->id = S1AP_ProtocolIE_ID_id_UE_associatedLogicalS1_ConnectionItem;
-    ie2->criticality = S1AP_Criticality_reject;
-    ie2->value.present = S1AP_UE_associatedLogicalS1_ConnectionItemRes__value_PR_UE_associatedLogicalS1_ConnectionItem;
-
-    item = &ie2->value.choice.UE_associatedLogicalS1_ConnectionItem;
-    item->mME_UE_S1AP_ID = mme_ue_s1ap_id;
-    item->eNB_UE_S1AP_ID = enb_ue_s1ap_id;
-
-    return ogs_s1ap_build_s1_reset(group, cause, partOfS1_Interface);
-}
-
 void ogs_s1ap_add_enb_ue_to_s1_reset(
     S1AP_UE_associatedLogicalS1_ConnectionListRes_t *partOfS1_Interface,
     uint32_t *mme_ue_s1ap_id,
