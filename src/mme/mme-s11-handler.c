@@ -779,12 +779,14 @@ void mme_s11_handle_release_access_bearers_response(
         }
     } else if (action == OGS_GTP_RELEASE_S1_CONTEXT_REMOVE_BY_LO_CONNREFUSED) {
         enb_ue = enb_ue_cycle(mme_ue->enb_ue);
+
+        mme_ue_deassociate(mme_ue);
+
         if (enb_ue) {
             enb_ue_remove(enb_ue);
         } else {
             ogs_warn("ENB-S1 Context has already been removed");
         }
-        mme_ue_deassociate(mme_ue);
 
     /*
      * TS36.413
@@ -801,6 +803,9 @@ void mme_s11_handle_release_access_bearers_response(
      */
     } else if (action == OGS_GTP_RELEASE_S1_CONTEXT_REMOVE_BY_RESET_ALL) {
         enb_ue = enb_ue_cycle(mme_ue->enb_ue);
+
+        mme_ue_deassociate(mme_ue);
+
         if (enb_ue) {
             mme_enb_t *enb = enb_ue->enb;
             ogs_assert(enb);
@@ -812,12 +817,16 @@ void mme_s11_handle_release_access_bearers_response(
         } else {
             ogs_warn("ENB-S1 Context has already been removed");
         }
-        mme_ue_deassociate(mme_ue);
+
     } else if (action == OGS_GTP_RELEASE_S1_CONTEXT_REMOVE_BY_RESET_PARTIAL) {
+        enb_ue_t *iter = NULL;
+
         enb_ue = enb_ue_cycle(mme_ue->enb_ue);
+
+        mme_ue_deassociate(mme_ue);
+
         if (enb_ue) {
             mme_enb_t *enb = enb_ue->enb;
-            enb_ue_t *iter = NULL;
             ogs_assert(enb);
 
             enb_ue_remove(enb_ue);
@@ -834,10 +843,14 @@ void mme_s11_handle_release_access_bearers_response(
             /* All ENB_UE context
              * where PartOfS1_interface was requested
              * REMOVED */
+            s1ap_send_to_enb(enb, enb->s1_reset_ack, S1AP_NON_UE_SIGNALLING);
+
+            /* Clear S1-Reset Ack Buffer */
+            enb->s1_reset_ack = NULL;
         } else {
             ogs_warn("ENB-S1 Context has already been removed");
         }
-        mme_ue_deassociate(mme_ue);
+
     } else {
         ogs_fatal("Invalid action = %d", action);
         ogs_assert_if_reached();

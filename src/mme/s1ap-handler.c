@@ -2086,6 +2086,8 @@ void s1ap_handle_s1_reset(
     S1AP_ResetType_t *ResetType = NULL;
     S1AP_UE_associatedLogicalS1_ConnectionListRes_t *partOfS1_Interface = NULL;
 
+    enb_ue_t *iter = NULL;
+
     ogs_assert(enb);
     ogs_assert(enb->sctp.sock);
 
@@ -2125,7 +2127,25 @@ void s1ap_handle_s1_reset(
 
         mme_gtp_send_release_all_ue_in_enb(
                 enb, OGS_GTP_RELEASE_S1_CONTEXT_REMOVE_BY_RESET_ALL);
+
+        /*
+         * TS36.413
+         * 8.7.1.2.1 Reset Procedure Initiated from the MME
+         *
+         * The eNB does not need to wait for the release of radio resources
+         * to be completed before returning the RESET ACKNOWLEDGE message.
+         *
+         * 8.7.1.2.2 Reset Procedure Initiated from the E-UTRAN
+         * After the MME has released all assigned S1 resources and
+         * the UE S1AP IDs for all indicated UE associations which can be used
+         * for new UE-associated logical S1-connections over the S1 interface,
+         * the MME shall respond with the RESET ACKNOWLEDGE message.
+         */
+        if (ogs_list_count(&enb->enb_ue_list) == 0)
+            s1ap_send_s1_reset_ack(enb, NULL);
+
         break;
+
     case S1AP_ResetType_PR_partOfS1_Interface:
         ogs_warn("    S1AP_ResetType_PR_partOfS1_Interface");
 
@@ -2174,7 +2194,42 @@ void s1ap_handle_s1_reset(
                 enb_ue_remove(enb_ue);
             }
         }
-        s1ap_send_s1_reset_ack(enb, partOfS1_Interface);
+
+        /*
+         * TS36.413
+         * 8.7.1.2.1 Reset Procedure Initiated from the MME
+         *
+         * The eNB does not need to wait for the release of radio resources
+         * to be completed before returning the RESET ACKNOWLEDGE message.
+         *
+         * 8.7.1.2.2 Reset Procedure Initiated from the E-UTRAN
+         * After the MME has released all assigned S1 resources and
+         * the UE S1AP IDs for all indicated UE associations which can be used
+         * for new UE-associated logical S1-connections over the S1 interface,
+         * the MME shall respond with the RESET ACKNOWLEDGE message.
+         */
+        if (enb->s1_reset_ack)
+            ogs_pkbuf_free(enb->s1_reset_ack);
+
+        enb->s1_reset_ack = ogs_s1ap_build_s1_reset_ack(partOfS1_Interface);
+        ogs_expect_or_return(enb->s1_reset_ack);
+
+        ogs_list_for_each(&enb->enb_ue_list, iter) {
+            if (iter->part_of_s1_reset_requested == true) {
+                /* The ENB_UE context
+                 * where PartOfS1_interface was requested
+                 * still remains */
+                return;
+            }
+        }
+
+        /* All ENB_UE context
+         * where PartOfS1_interface was requested
+         * REMOVED */
+        s1ap_send_to_enb(enb, enb->s1_reset_ack, S1AP_NON_UE_SIGNALLING);
+
+        /* Clear S1-Reset Ack Buffer */
+        enb->s1_reset_ack = NULL;
         break;
     default:
         ogs_warn("Invalid ResetType[%d]", ResetType->present);

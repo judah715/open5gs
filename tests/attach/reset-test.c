@@ -733,32 +733,6 @@ static void test2_func(abts_case *tc, void *data)
     ABTS_PTR_NOTNULL(tc, recvbuf);
     ogs_pkbuf_free(recvbuf);
 
-#if 0
-        /* Send S1-Reset */
-        uint32_t a = 5, b = 4;
-        partOfS1_Interface = NULL;
-
-        ogs_s1ap_build_s1_reset_partial(
-                &partOfS1_Interface,
-                &test_ue[i]->mme_ue_s1ap_id, &test_ue[i]->enb_ue_s1ap_id);
-        ogs_s1ap_build_s1_reset_partial(
-                &partOfS1_Interface,
-                &a, &b);
-
-        sendbuf = ogs_s1ap_build_s1_reset(
-                S1AP_Cause_PR_radioNetwork,
-                S1AP_CauseRadioNetwork_release_due_to_eutran_generated_reason,
-                partOfS1_Interface);
-
-        rv = testenb_s1ap_send(s1ap, sendbuf);
-        ABTS_INT_EQUAL(tc, OGS_OK, rv);
-
-        /* Receive S1-Reset Acknowledge */
-        recvbuf = testenb_s1ap_read(s1ap);
-        ABTS_PTR_NOTNULL(tc, recvbuf);
-        tests1ap_recv(test_ue[i], recvbuf);
-#endif
-
     ogs_msleep(300);
 
     for (i = 0; i < NUM_OF_TEST_UE; i++) {

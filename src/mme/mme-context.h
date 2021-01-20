@@ -222,6 +222,8 @@ typedef struct mme_enb_s {
     uint8_t         num_of_supported_ta_list;
     ogs_eps_tai_t   supported_ta_list[OGS_MAX_NUM_OF_TAI*OGS_MAX_NUM_OF_BPLMN];
 
+    ogs_pkbuf_t     *s1_reset_ack; /* Reset message */
+
     ogs_list_t      enb_ue_list;
 
 } mme_enb_t;
