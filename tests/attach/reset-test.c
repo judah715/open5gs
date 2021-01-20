@@ -378,7 +378,7 @@ static void test2_func(abts_case *tc, void *data)
     test_sess_t *sess = NULL;
     test_bearer_t *bearer = NULL;
 
-    S1AP_MME_UE_S1AP_ID_t *mme_ue_s1ap_id = NULL;
+    S1AP_UE_associatedLogicalS1_ConnectionListRes_t *partOfS1_Interface = NULL;
 
     const char *_k_string = "465b5ce8b199b49faa5f0a2ee238a6bc";
     uint8_t k[OGS_KEY_LEN];
@@ -617,15 +617,24 @@ static void test2_func(abts_case *tc, void *data)
     ABTS_PTR_NOTNULL(tc, recvbuf);
     tests1ap_recv(test_ue, recvbuf);
 
-#if 0
     /* Send S1-Reset */
-    mme_ue_s1ap_id = CALLOC(1, sizeof(S1AP_MME_UE_S1AP_ID_t));
-    ogs_assert(mme_ue_s1ap_id);
-    *mme_ue_s1ap_id = test_ue->mme_ue_s1ap_id;
-    sendbuf = ogs_s1ap_build_s1_reset_partial(
+    uint32_t a = 5, b = 4;
+    partOfS1_Interface = CALLOC(1,
+            sizeof(S1AP_UE_associatedLogicalS1_ConnectionListRes_t));
+    ogs_assert(partOfS1_Interface);
+
+    ogs_s1ap_add_enb_ue_to_s1_reset(
+            partOfS1_Interface,
+            &test_ue->mme_ue_s1ap_id, &test_ue->enb_ue_s1ap_id);
+    ogs_s1ap_add_enb_ue_to_s1_reset(
+            partOfS1_Interface,
+            &a, &b);
+
+    sendbuf = ogs_s1ap_build_s1_reset(
             S1AP_Cause_PR_radioNetwork,
             S1AP_CauseRadioNetwork_release_due_to_eutran_generated_reason,
-            mme_ue_s1ap_id, NULL);
+            partOfS1_Interface);
+
     rv = testenb_s1ap_send(s1ap, sendbuf);
     ABTS_INT_EQUAL(tc, OGS_OK, rv);
 
@@ -633,7 +642,6 @@ static void test2_func(abts_case *tc, void *data)
     recvbuf = testenb_s1ap_read(s1ap);
     ABTS_PTR_NOTNULL(tc, recvbuf);
     tests1ap_recv(test_ue, recvbuf);
-#endif
 
     /********** Remove Subscriber in Database */
     doc = BCON_NEW("imsi", BCON_UTF8(test_ue->imsi));
@@ -657,10 +665,10 @@ abts_suite *test_reset(abts_suite *suite)
 {
     suite = ADD_SUITE(suite)
 
-    abts_run_test(suite, test1_func, NULL);
 #if 0
-    abts_run_test(suite, test2_func, NULL);
+    abts_run_test(suite, test1_func, NULL);
 #endif
+    abts_run_test(suite, test2_func, NULL);
 
     return suite;
 }

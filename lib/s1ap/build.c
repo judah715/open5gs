@@ -182,6 +182,38 @@ ogs_pkbuf_t *ogs_s1ap_build_s1_reset_partial(
     return ogs_s1ap_build_s1_reset(group, cause, partOfS1_Interface);
 }
 
+void ogs_s1ap_add_enb_ue_to_s1_reset(
+    S1AP_UE_associatedLogicalS1_ConnectionListRes_t *partOfS1_Interface,
+    uint32_t *mme_ue_s1ap_id,
+    uint32_t *enb_ue_s1ap_id)
+{
+    S1AP_UE_associatedLogicalS1_ConnectionItemRes_t *ie = NULL;
+    S1AP_UE_associatedLogicalS1_ConnectionItem_t *item = NULL;
+
+    ogs_assert(partOfS1_Interface);
+    ogs_assert(mme_ue_s1ap_id || enb_ue_s1ap_id);
+
+    ie = CALLOC(1, sizeof(S1AP_UE_associatedLogicalS1_ConnectionItemRes_t));
+    ASN_SEQUENCE_ADD(&partOfS1_Interface->list, ie);
+
+    ie->id = S1AP_ProtocolIE_ID_id_UE_associatedLogicalS1_ConnectionItem;
+    ie->criticality = S1AP_Criticality_reject;
+    ie->value.present = S1AP_UE_associatedLogicalS1_ConnectionItemRes__value_PR_UE_associatedLogicalS1_ConnectionItem;
+
+    item = &ie->value.choice.UE_associatedLogicalS1_ConnectionItem;
+    if (mme_ue_s1ap_id) {
+        item->mME_UE_S1AP_ID = CALLOC(1, sizeof(*item->mME_UE_S1AP_ID));
+        ogs_assert(item->mME_UE_S1AP_ID);
+        *item->mME_UE_S1AP_ID = *mme_ue_s1ap_id;
+    }
+
+    if (enb_ue_s1ap_id) {
+        item->eNB_UE_S1AP_ID = CALLOC(1, sizeof(*item->eNB_UE_S1AP_ID));
+        ogs_assert(item->eNB_UE_S1AP_ID);
+        *item->eNB_UE_S1AP_ID = *enb_ue_s1ap_id;
+    }
+}
+
 ogs_pkbuf_t *ogs_s1ap_build_s1_reset_ack(
         S1AP_UE_associatedLogicalS1_ConnectionListRes_t *partOfS1_Interface)
 {
@@ -206,7 +238,7 @@ ogs_pkbuf_t *ogs_s1ap_build_s1_reset_ack(
     ResetAcknowledge = &successfulOutcome->value.choice.ResetAcknowledge;
 
     if (partOfS1_Interface && partOfS1_Interface->list.count) {
-        int i = 0;
+        int i;
         S1AP_UE_associatedLogicalS1_ConnectionListResAck_t *list = NULL;
 
         ie = CALLOC(1, sizeof(S1AP_ResetAcknowledgeIEs_t));
@@ -234,13 +266,13 @@ ogs_pkbuf_t *ogs_s1ap_build_s1_reset_ack(
             ogs_assert(item1);
 
             if (item1->mME_UE_S1AP_ID == NULL &&
-                    item1->eNB_UE_S1AP_ID == NULL) {
+                item1->eNB_UE_S1AP_ID == NULL) {
                 ogs_warn("No MME_UE_S1AP_ID & ENB_UE_S1AP_ID");
                 continue;
             }
 
             ie2 = CALLOC(1,
-                    sizeof(S1AP_UE_associatedLogicalS1_ConnectionItemResAck_t));
+                sizeof(S1AP_UE_associatedLogicalS1_ConnectionItemResAck_t));
             ogs_assert(ie2);
             ASN_SEQUENCE_ADD(&list->list, ie2);
 
@@ -253,15 +285,15 @@ ogs_pkbuf_t *ogs_s1ap_build_s1_reset_ack(
             ogs_assert(item2);
 
             if (item1->mME_UE_S1AP_ID) {
-                item2->mME_UE_S1AP_ID = CALLOC(1,
-                        sizeof(S1AP_MME_UE_S1AP_ID_t));
+                item2->mME_UE_S1AP_ID =
+                    CALLOC(1, sizeof(S1AP_MME_UE_S1AP_ID_t));
                 ogs_assert(item2->mME_UE_S1AP_ID);
                 *item2->mME_UE_S1AP_ID = *item1->mME_UE_S1AP_ID;
             }
 
             if (item1->eNB_UE_S1AP_ID) {
-                item2->eNB_UE_S1AP_ID = CALLOC(1,
-                        sizeof(S1AP_ENB_UE_S1AP_ID_t));
+                item2->eNB_UE_S1AP_ID =
+                    CALLOC(1, sizeof(S1AP_ENB_UE_S1AP_ID_t));
                 ogs_assert(item2->eNB_UE_S1AP_ID);
                 *item2->eNB_UE_S1AP_ID = *item1->eNB_UE_S1AP_ID;
             }
