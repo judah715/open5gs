@@ -2124,7 +2124,7 @@ void s1ap_handle_s1_reset(
         ogs_warn("    S1AP_ResetType_PR_s1_Interface");
 
         mme_gtp_send_release_all_ue_in_enb(
-                enb, OGS_GTP_RELEASE_S1_CONTEXT_REMOVE);
+                enb, OGS_GTP_RELEASE_S1_CONTEXT_REMOVE_BY_RESET_ALL);
         break;
     case S1AP_ResetType_PR_partOfS1_Interface:
         ogs_warn("    S1AP_ResetType_PR_partOfS1_Interface");
@@ -2167,7 +2167,7 @@ void s1ap_handle_s1_reset(
             ogs_assert(mme_ue);
 
             mme_gtp_send_release_access_bearers_request(
-                    mme_ue, OGS_GTP_RELEASE_S1_CONTEXT_REMOVE);
+                    mme_ue, OGS_GTP_RELEASE_S1_CONTEXT_REMOVE_BY_RESET_PARTIAL);
         }
         break;
     default:
