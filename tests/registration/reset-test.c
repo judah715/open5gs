@@ -342,8 +342,8 @@ static void test1_func(abts_case *tc, void *data)
 
     /* Send NGReset */
     sendbuf = ogs_ngap_build_ng_reset(
-            S1AP_Cause_PR_radioNetwork,
-            S1AP_CauseRadioNetwork_release_due_to_eutran_generated_reason,
+            NGAP_Cause_PR_radioNetwork,
+            NGAP_CauseRadioNetwork_release_due_to_ngran_generated_reason,
             NULL);
     rv = testgnb_ngap_send(ngap, sendbuf);
     ABTS_INT_EQUAL(tc, OGS_OK, rv);
@@ -678,8 +678,8 @@ static void test2_func(abts_case *tc, void *data)
             partOfNG_Interface, &test_ue->ran_ue_ngap_id, NULL);
 
     sendbuf = ogs_ngap_build_ng_reset(
-            S1AP_Cause_PR_radioNetwork,
-            S1AP_CauseRadioNetwork_release_due_to_eutran_generated_reason,
+            NGAP_Cause_PR_radioNetwork,
+            NGAP_CauseRadioNetwork_release_due_to_ngran_generated_reason,
             partOfNG_Interface);
 
     rv = testgnb_ngap_send(ngap, sendbuf);
