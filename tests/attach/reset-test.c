@@ -536,7 +536,7 @@ static void test2_func(abts_case *tc, void *data)
     ABTS_PTR_NOTNULL(tc, recvbuf);
     tests1ap_recv(NULL, recvbuf);
 
-    for (i = 0; i < 3; i++) {
+    for (i = 0; i < NUM_OF_TEST_UE; i++) {
         /* Setup Test UE & Session Context */
         memset(&mobile_identity_suci, 0, sizeof(mobile_identity_suci));
 
@@ -605,7 +605,7 @@ static void test2_func(abts_case *tc, void *data)
         bson_destroy(doc);
     }
 
-    for (i = 0; i < 3; i++) {
+    for (i = 0; i < NUM_OF_TEST_UE; i++) {
         sess = test_sess_find_by_apn(test_ue[i], "internet");
         ogs_assert(sess);
 
@@ -731,7 +731,7 @@ static void test2_func(abts_case *tc, void *data)
     /* Receive S1-Reset Acknowledge */
     recvbuf = testenb_s1ap_read(s1ap);
     ABTS_PTR_NOTNULL(tc, recvbuf);
-    tests1ap_recv(test_ue[i], recvbuf);
+    ogs_pkbuf_free(recvbuf);
 
 #if 0
         /* Send S1-Reset */
@@ -761,7 +761,7 @@ static void test2_func(abts_case *tc, void *data)
 
     ogs_msleep(300);
 
-    for (i = 0; i < 3; i++) {
+    for (i = 0; i < NUM_OF_TEST_UE; i++) {
         /********** Remove Subscriber in Database */
         doc = BCON_NEW("imsi", BCON_UTF8(test_ue[i]->imsi));
         ABTS_PTR_NOTNULL(tc, doc);
@@ -769,9 +769,6 @@ static void test2_func(abts_case *tc, void *data)
                 MONGOC_REMOVE_SINGLE_REMOVE, doc, NULL, &error))
         bson_destroy(doc);
     }
-
-    for (i = 0; i < 3; i++)
-        test_ue_remove(test_ue[i]);
 
     /* eNB disonncect from MME */
     testenb_s1ap_close(s1ap);
@@ -781,13 +778,17 @@ static void test2_func(abts_case *tc, void *data)
 
     /* Destroy DB collection */
     mongoc_collection_destroy(collection);
+
+    test_ue_remove_all();
 }
 
 abts_suite *test_reset(abts_suite *suite)
 {
     suite = ADD_SUITE(suite)
 
+#if 0
     abts_run_test(suite, test1_func, NULL);
+#endif
     abts_run_test(suite, test2_func, NULL);
 
     return suite;

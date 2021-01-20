@@ -2169,33 +2169,12 @@ void s1ap_handle_s1_reset(
             mme_gtp_send_release_access_bearers_request(
                     mme_ue, OGS_GTP_RELEASE_S1_CONTEXT_REMOVE_BY_RESET_PARTIAL);
         }
+        s1ap_send_s1_reset_ack(enb, partOfS1_Interface);
         break;
     default:
         ogs_warn("Invalid ResetType[%d]", ResetType->present);
         break;
     }
-
-    /*
-     * In the specification, eNB can send RESET ACK without waiting
-     * for resource release, but MME must send after releasing all resources.
-     *
-     * Why? Huh.. At this point, I implemented MME to send RESET ACK
-     * without waiting for resource release. If problems are found,
-     * I will fix them later.
-     *
-     * TS36.413
-     * 8.7.1.2.1 Reset Procedure Initiated from the MME
-     *
-     * The eNB does not need to wait for the release of radio resources
-     * to be completed before returning the RESET ACKNOWLEDGE message.
-     *
-     * 8.7.1.2.2 Reset Procedure Initiated from the E-UTRAN
-     * After the MME has released all assigned S1 resources and
-     * the UE S1AP IDs for all indicated UE associations which can be used
-     * for new UE-associated logical S1-connections over the S1 interface,
-     * the MME shall respond with the RESET ACKNOWLEDGE message.
-     */
-    s1ap_send_s1_reset_ack(enb, partOfS1_Interface);
 }
 
 void s1ap_handle_write_replace_warning_response(

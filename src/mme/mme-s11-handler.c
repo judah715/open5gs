@@ -778,11 +778,37 @@ void mme_s11_handle_release_access_bearers_response(
             ogs_warn("ENB-S1 Context has already been removed");
         }
     } else if (action == OGS_GTP_RELEASE_S1_CONTEXT_REMOVE_BY_LO_CONNREFUSED ||
-                action == OGS_GTP_RELEASE_S1_CONTEXT_REMOVE_BY_RESET_ALL ||
                 action == OGS_GTP_RELEASE_S1_CONTEXT_REMOVE_BY_RESET_PARTIAL) {
         enb_ue = enb_ue_cycle(mme_ue->enb_ue);
         if (enb_ue) {
             enb_ue_remove(enb_ue);
+        } else {
+            ogs_warn("ENB-S1 Context has already been removed");
+        }
+        mme_ue_deassociate(mme_ue);
+    } else if (action == OGS_GTP_RELEASE_S1_CONTEXT_REMOVE_BY_RESET_ALL) {
+        enb_ue = enb_ue_cycle(mme_ue->enb_ue);
+        if (enb_ue) {
+            mme_enb_t *enb = enb_ue->enb;
+            ogs_assert(enb);
+
+            enb_ue_remove(enb_ue);
+
+    /*
+     * TS36.413
+     * 8.7.1.2.1 Reset Procedure Initiated from the MME
+     *
+     * The eNB does not need to wait for the release of radio resources
+     * to be completed before returning the RESET ACKNOWLEDGE message.
+     *
+     * 8.7.1.2.2 Reset Procedure Initiated from the E-UTRAN
+     * After the MME has released all assigned S1 resources and
+     * the UE S1AP IDs for all indicated UE associations which can be used
+     * for new UE-associated logical S1-connections over the S1 interface,
+     * the MME shall respond with the RESET ACKNOWLEDGE message.
+     */
+            if (ogs_list_count(&enb->enb_ue_list) == 0)
+                s1ap_send_s1_reset_ack(enb, NULL);
         } else {
             ogs_warn("ENB-S1 Context has already been removed");
         }
