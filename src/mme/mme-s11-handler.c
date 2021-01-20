@@ -786,6 +786,7 @@ void mme_s11_handle_release_access_bearers_response(
         } else {
             ogs_warn("ENB-S1 Context has already been removed");
         }
+        mme_ue_deassociate(mme_ue);
     } else {
         ogs_fatal("Invalid action = %d", action);
         ogs_assert_if_reached();

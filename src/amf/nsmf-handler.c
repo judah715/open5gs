@@ -382,6 +382,7 @@ int amf_nsmf_pdu_session_handle_update_sm_context(
                         ogs_warn("[%s] RAN-NG Context has already been removed",
                                 amf_ue->supi);
                     }
+                    amf_ue_deassociate(amf_ue);
                 }
 
             } else {
