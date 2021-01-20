@@ -351,9 +351,7 @@ static void test1_func(abts_case *tc, void *data)
     /* Receive NGResetAcknowledge */
     recvbuf = testgnb_ngap_read(ngap);
     ABTS_PTR_NOTNULL(tc, recvbuf);
-    testngap_recv(test_ue, recvbuf);
-    ABTS_INT_EQUAL(tc,
-            NGAP_ProcedureCode_id_NGReset, test_ue->ngap_procedure_code);
+    ogs_pkbuf_free(recvbuf);
 
     ogs_msleep(100);
 
@@ -688,9 +686,7 @@ static void test2_func(abts_case *tc, void *data)
     /* Receive NGResetAcknowledge */
     recvbuf = testgnb_ngap_read(ngap);
     ABTS_PTR_NOTNULL(tc, recvbuf);
-    testngap_recv(test_ue, recvbuf);
-    ABTS_INT_EQUAL(tc,
-            NGAP_ProcedureCode_id_NGReset, test_ue->ngap_procedure_code);
+    ogs_pkbuf_free(recvbuf);
 
     ogs_msleep(100);
 

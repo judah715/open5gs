@@ -317,7 +317,7 @@ static void test1_func(abts_case *tc, void *data)
     /* Receive S1-Reset Acknowledge */
     recvbuf = testenb_s1ap_read(s1ap);
     ABTS_PTR_NOTNULL(tc, recvbuf);
-    tests1ap_recv(test_ue, recvbuf);
+    ogs_pkbuf_free(recvbuf);
 
     /* Send Service Request - INVALID M-TMSI */
     test_ue->nas_eps_guti.m_tmsi = 0x1234;
@@ -786,9 +786,7 @@ abts_suite *test_reset(abts_suite *suite)
 {
     suite = ADD_SUITE(suite)
 
-#if 0
     abts_run_test(suite, test1_func, NULL);
-#endif
     abts_run_test(suite, test2_func, NULL);
 
     return suite;
