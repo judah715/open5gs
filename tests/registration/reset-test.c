@@ -392,6 +392,7 @@ static void test1_func(abts_case *tc, void *data)
     test_ue_remove(test_ue);
 }
 
+#if 0
 static void test2_func(abts_case *tc, void *data)
 {
     int rv;
@@ -726,6 +727,7 @@ static void test2_func(abts_case *tc, void *data)
     /* Clear Test UE Context */
     test_ue_remove(test_ue);
 }
+#endif
 
 abts_suite *test_reset(abts_suite *suite)
 {

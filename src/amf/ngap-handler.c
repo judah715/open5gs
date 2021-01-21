@@ -2015,7 +2015,9 @@ void ngap_handle_ng_reset(
     NGAP_NGResetIEs_t *ie = NULL;
     NGAP_Cause_t *Cause = NULL;
     NGAP_ResetType_t *ResetType = NULL;
+#if 0
     NGAP_UE_associatedLogicalNG_connectionList_t *partOfNG_Interface = NULL;
+#endif
 
     ogs_assert(gnb);
     ogs_assert(gnb->sctp.sock);

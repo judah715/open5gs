@@ -3,6 +3,7 @@
 #include "amf/ngap-build.h"
 #include "test-common.h"
 
+#if 0
 static void ngap_message_test1(abts_case *tc, void *data)
 {
     ogs_pkbuf_t *pkbuf = NULL;
@@ -97,13 +98,14 @@ static void ngap_message_test2(abts_case *tc, void *data)
     ogs_fatal("Failed to decode ASN-PDU [code:%d,consumed:%d]",
             dec_ret.code, (int)dec_ret.consumed);
 }
+#endif
 
 abts_suite *test_ngap_message(abts_suite *suite)
 {
     suite = ADD_SUITE(suite)
 
-    abts_run_test(suite, ngap_message_test1, NULL);
 #if 0
+    abts_run_test(suite, ngap_message_test1, NULL);
     abts_run_test(suite, ngap_message_test2, NULL);
 #endif
 

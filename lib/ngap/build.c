@@ -189,7 +189,9 @@ ogs_pkbuf_t *ogs_ngap_build_ng_reset_ack(
     NGAP_SuccessfulOutcome_t *successfulOutcome = NULL;
     NGAP_NGResetAcknowledge_t *NGResetAcknowledge = NULL;
 
+#if 0
     NGAP_NGResetAcknowledgeIEs_t *ie = NULL;
+#endif
 
     ogs_debug("Reset acknowledge");
 
@@ -204,6 +206,7 @@ ogs_pkbuf_t *ogs_ngap_build_ng_reset_ack(
         NGAP_SuccessfulOutcome__value_PR_NGResetAcknowledge;
 
     NGResetAcknowledge = &successfulOutcome->value.choice.NGResetAcknowledge;
+    ogs_assert(NGResetAcknowledge);
 
 #if 0
     if (partOfNG_Interface && partOfNG_Interface->list.count) {
