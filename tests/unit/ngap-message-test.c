@@ -67,11 +67,12 @@ static void ngap_message_test1(abts_case *tc, void *data)
     ogs_fatal("Failed to decode ASN-PDU [code:%d,consumed:%d]",
             dec_ret.code, (int)dec_ret.consumed);
 }
+#endif
 
 static void ngap_message_test2(abts_case *tc, void *data)
 {
-    /* NGResetAcknowledge */
-    const char *payload = "2014000c00000100 6f00050160020001";
+    /* NGReset */
+    const char *payload = "0014001300000200 0f400200c0005800 06400160010001";
 
     ogs_ngap_message_t message;
     ogs_pkbuf_t *pkbuf;
@@ -87,7 +88,7 @@ static void ngap_message_test2(abts_case *tc, void *data)
     pkbuf = ogs_pkbuf_alloc(NULL, OGS_MAX_SDU_LEN);
     ogs_assert(pkbuf);
     ogs_pkbuf_put_data(pkbuf,
-            OGS_HEX(payload, strlen(payload), hexbuf), 16);
+            OGS_HEX(payload, strlen(payload), hexbuf), 23);
 
     struct_ptr = &message;
     struct_size = sizeof(ogs_ngap_message_t);
@@ -98,7 +99,6 @@ static void ngap_message_test2(abts_case *tc, void *data)
     ogs_fatal("Failed to decode ASN-PDU [code:%d,consumed:%d]",
             dec_ret.code, (int)dec_ret.consumed);
 }
-#endif
 
 abts_suite *test_ngap_message(abts_suite *suite)
 {
@@ -106,8 +106,8 @@ abts_suite *test_ngap_message(abts_suite *suite)
 
 #if 0
     abts_run_test(suite, ngap_message_test1, NULL);
-    abts_run_test(suite, ngap_message_test2, NULL);
 #endif
+    abts_run_test(suite, ngap_message_test2, NULL);
 
     return suite;
 }
