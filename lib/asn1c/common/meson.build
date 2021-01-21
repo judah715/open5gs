@@ -125,18 +125,23 @@ libasn1c_common_cc_flags = ['-DASN_DISABLE_BER_SUPPORT',
                             '-DASN_DISABLE_OER_SUPPORT',
                             '-DASN_DISABLE_UPER_SUPPORT']
 
+#libasn1c_common_cc_flags += cc.get_supported_arguments([
+#    '-Wno-parentheses-equality',
+#    '-Wno-overflow',
+#    '-Wno-format',
+#
+#    '-Wno-implicit-fallthrough',
+#    '-Wno-missing-prototypes',
+#    '-Wno-missing-declarations',
+#    '-Wno-missing-field-initializers',
+#    '-Wno-format-nonliteral',
+#    '-Wno-format-security',
+#    '-Wno-type-limits',
+#    '-w',
+#    '-std=gnu99',
+#])
 libasn1c_common_cc_flags += cc.get_supported_arguments([
-    '-Wno-parentheses-equality',
-    '-Wno-overflow',
-    '-Wno-format',
-    
-    '-Wno-implicit-fallthrough',
-    '-Wno-missing-prototypes',
-    '-Wno-missing-declarations',
-    '-Wno-missing-field-initializers',
-    '-Wno-format-nonliteral',
-    '-Wno-format-security',
-    '-std=gnu99',
+    '-w', '-std=gnu99',
 ])
 
 libasn1c_common_inc = include_directories('.')
