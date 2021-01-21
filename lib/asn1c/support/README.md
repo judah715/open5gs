@@ -1,9 +1,15 @@
 Use mounse07410(vlm_master) git's fork for asn1c
+
+commit dcf963c0e43196057a97feac16421fe79dc7d943 (HEAD -> vlm_master, origin/vlm_master, origin/HEAD)
+Merge: b33a84f9 c35ebd33
+Author: Mouse <mouse008@gmail.com>
+Date:   Sun Nov 1 08:58:12 2020 -0500
+
 ===========================================
 user@host ~/Documents/git/my$ \
     git clone https://github.com/mouse07410/asn1c.git
 user@host ~/Documents/git/my$ \
-    git checkout ca3d87a0a3e27ce71b3800210f58d2a3c759f573
+    git checkout dcf963c0e43196057a97feac16421fe79dc7d943
 
 OR
 
@@ -129,6 +135,25 @@ index 26da1b34..940db758 100644
 +       { APC_CONSTRAINED,       64, -1,  0,  18446744073709551615U }   /* (0..18446744073709551615) */,
         { APC_UNCONSTRAINED,    -1, -1,  0,  0 },
         0, 0    /* No PER value map */
+
+Fix NGAP_ProtocolExtensionField.c
+===========================================
+$ diff --git a/lib/asn1c/ngap/NGAP_ProtocolExtensionField.c b/lib/asn1c/ngap/NGAP_ProtocolExtensionField.c
+index 2d0d96c7..d2e6b114 100644
+--- a/lib/asn1c/ngap/NGAP_ProtocolExtensionField.c
++++ b/lib/asn1c/ngap/NGAP_ProtocolExtensionField.c
+@@ -31124,11 +31124,7 @@ static asn_TYPE_member_t asn_MBR_NGAP_extensionValue_396[] = {
+                        0,
+ #endif  /* !defined(ASN_DISABLE_OER_SUPPORT) */
+ #if !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT)
++#if 0 /* modified by acetcom */
+                        &asn_PER_memb_NGAP_OCTET_STRING_CONTAINING_PDUSessionResourceReleaseResponseTransfer__constr_17,
++#else
++            0,
++#endif
+ #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
+                        memb_NGAP_OCTET_STRING_CONTAINING_PDUSessionResourceReleaseResponseTransfer__constraint_396
+                },
 
 Check common file
 ===========================================
