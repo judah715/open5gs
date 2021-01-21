@@ -102,10 +102,10 @@ abts_suite *test_ngap_message(abts_suite *suite)
 {
     suite = ADD_SUITE(suite)
 
-#if 0
     abts_run_test(suite, ngap_message_test1, NULL);
-#endif
+#if 0
     abts_run_test(suite, ngap_message_test2, NULL);
+#endif
 
     return suite;
 }
