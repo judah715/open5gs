@@ -31,6 +31,7 @@ ogs_pkbuf_t *ngap_build_pdu_session_resource_setup_request_transfer(
     NGAP_PDUSessionAggregateMaximumBitRate_t *PDUSessionAggregateMaximumBitRate;
     NGAP_UPTransportLayerInformation_t *UPTransportLayerInformation = NULL;
     NGAP_GTPTunnel_t *gTPTunnel = NULL;
+    NGAP_DataForwardingNotPossible_t *DataForwardingNotPossible = NULL;
     NGAP_PDUSessionType_t *PDUSessionType = NULL;
     NGAP_QosFlowSetupRequestList_t *QosFlowSetupRequestList = NULL;
     NGAP_QosFlowSetupRequestItem_t *QosFlowSetupRequestItem = NULL;
@@ -49,6 +50,7 @@ ogs_pkbuf_t *ngap_build_pdu_session_resource_setup_request_transfer(
     if (sess->pdn.ambr.downlink || sess->pdn.ambr.uplink) {
         ie = CALLOC(1,
                 sizeof(NGAP_PDUSessionResourceSetupRequestTransferIEs_t));
+        ogs_assert(ie);
         ASN_SEQUENCE_ADD(&message.protocolIEs, ie);
 
         ie->id = NGAP_ProtocolIE_ID_id_PDUSessionAggregateMaximumBitRate;
@@ -65,6 +67,7 @@ ogs_pkbuf_t *ngap_build_pdu_session_resource_setup_request_transfer(
     }
 
     ie = CALLOC(1, sizeof(NGAP_PDUSessionResourceSetupRequestTransferIEs_t));
+    ogs_assert(ie);
     ASN_SEQUENCE_ADD(&message.protocolIEs, ie);
 
     ie->id = NGAP_ProtocolIE_ID_id_UL_NGU_UP_TNLInformation;
@@ -74,6 +77,7 @@ ogs_pkbuf_t *ngap_build_pdu_session_resource_setup_request_transfer(
     UPTransportLayerInformation = &ie->value.choice.UPTransportLayerInformation;
 
     gTPTunnel = CALLOC(1, sizeof(struct NGAP_GTPTunnel));
+    ogs_assert(gTPTunnel);
     UPTransportLayerInformation->present =
         NGAP_UPTransportLayerInformation_PR_gTPTunnel;
     UPTransportLayerInformation->choice.gTPTunnel = gTPTunnel;
@@ -83,7 +87,24 @@ ogs_pkbuf_t *ngap_build_pdu_session_resource_setup_request_transfer(
     ogs_asn_ip_to_BIT_STRING(&upf_n3_ip, &gTPTunnel->transportLayerAddress);
     ogs_asn_uint32_to_OCTET_STRING(sess->upf_n3_teid, &gTPTunnel->gTP_TEID);
 
+    if (sess->handover.direct_available == false) {
+        ie = CALLOC(1,
+                sizeof(NGAP_PDUSessionResourceSetupRequestTransferIEs_t));
+        ogs_assert(ie);
+        ASN_SEQUENCE_ADD(&message.protocolIEs, ie);
+
+        ie->id = NGAP_ProtocolIE_ID_id_DataForwardingNotPossible;
+        ie->criticality = NGAP_Criticality_reject;
+        ie->value.present = NGAP_PDUSessionResourceSetupRequestTransferIEs__value_PR_DataForwardingNotPossible;
+
+        DataForwardingNotPossible = &ie->value.choice.DataForwardingNotPossible;
+
+        *DataForwardingNotPossible =
+            NGAP_DataForwardingNotPossible_data_forwarding_not_possible;
+    }
+
     ie = CALLOC(1, sizeof(NGAP_PDUSessionResourceSetupRequestTransferIEs_t));
+    ogs_assert(ie);
     ASN_SEQUENCE_ADD(&message.protocolIEs, ie);
 
     ie->id = NGAP_ProtocolIE_ID_id_PDUSessionType;
@@ -109,6 +130,7 @@ ogs_pkbuf_t *ngap_build_pdu_session_resource_setup_request_transfer(
     }
 
     ie = CALLOC(1, sizeof(NGAP_PDUSessionResourceSetupRequestTransferIEs_t));
+    ogs_assert(ie);
     ASN_SEQUENCE_ADD(&message.protocolIEs, ie);
 
     ie->id = NGAP_ProtocolIE_ID_id_QosFlowSetupRequestList;
@@ -120,6 +142,7 @@ ogs_pkbuf_t *ngap_build_pdu_session_resource_setup_request_transfer(
     ogs_list_for_each(&sess->bearer_list, qos_flow) {
         QosFlowSetupRequestItem =
             CALLOC(1, sizeof(struct NGAP_QosFlowSetupRequestItem));
+        ogs_assert(QosFlowSetupRequestItem);
         ASN_SEQUENCE_ADD(&QosFlowSetupRequestList->list,
             QosFlowSetupRequestItem);
 
@@ -131,6 +154,7 @@ ogs_pkbuf_t *ngap_build_pdu_session_resource_setup_request_transfer(
             &qosFlowLevelQosParameters->allocationAndRetentionPriority;
         qosCharacteristics = &qosFlowLevelQosParameters->qosCharacteristics;
         nonDynamic5QI = CALLOC(1, sizeof(struct NGAP_NonDynamic5QIDescriptor));
+        ogs_assert(nonDynamic5QI);
         qosCharacteristics->choice.nonDynamic5QI = nonDynamic5QI;
         qosCharacteristics->present = NGAP_QosCharacteristics_PR_nonDynamic5QI;
 
@@ -165,6 +189,7 @@ ogs_pkbuf_t *ngap_build_pdu_session_resource_setup_request_transfer(
 
             qosFlowLevelQosParameters->gBR_QosInformation =
                 gBR_QosInformation = CALLOC(1, sizeof(*gBR_QosInformation));
+            ogs_assert(gBR_QosInformation);
 
             asn_uint642INTEGER(&gBR_QosInformation->maximumFlowBitRateDL,
                     qos_flow->qos.mbr.downlink);

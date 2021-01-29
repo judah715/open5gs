@@ -362,6 +362,9 @@ int ngap_handle_handover_required_transfer(
 
     NGAP_HandoverRequiredTransfer_t message;
 
+    NGAP_DirectForwardingPathAvailability_t
+        *directForwardingPathAvailability = NULL;
+
     ogs_pkbuf_t *n2smbuf = NULL;
 
     ogs_assert(pkbuf);
@@ -380,6 +383,13 @@ int ngap_handle_handover_required_transfer(
                 OGS_SBI_HTTP_STATUS_BAD_REQUEST,
                 "No N2 SM Info Type", smf_ue->supi, NULL, NULL);
         goto cleanup;
+    }
+
+    directForwardingPathAvailability = message.directForwardingPathAvailability;
+    if (directForwardingPathAvailability) {
+        sess->handover.direct_available = true;
+    } else {
+        sess->handover.direct_available = false;
     }
 
     n2smbuf = ngap_build_pdu_session_resource_setup_request_transfer(sess);

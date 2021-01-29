@@ -19,7 +19,7 @@
 
 #include "test-common.h"
 
-static void test1_func(abts_case *tc, void *data)
+static void direct_func(abts_case *tc, void *data)
 {
     int rv;
     ogs_socknode_t *ngap1, *ngap2;
@@ -769,7 +769,7 @@ static void test1_func(abts_case *tc, void *data)
     test_ue_remove(test_ue);
 }
 
-static void test2_func(abts_case *tc, void *data)
+static void failure_func(abts_case *tc, void *data)
 {
     int rv;
     ogs_socknode_t *ngap1, *ngap2;
@@ -1295,7 +1295,7 @@ static void test2_func(abts_case *tc, void *data)
     test_ue_remove(test_ue);
 }
 
-static void test3_func(abts_case *tc, void *data)
+static void cancel_func(abts_case *tc, void *data)
 {
     int rv;
     ogs_socknode_t *ngap1, *ngap2;
@@ -1842,9 +1842,9 @@ abts_suite *test_5gc_n2(abts_suite *suite)
 {
     suite = ADD_SUITE(suite)
 
-    abts_run_test(suite, test1_func, NULL);
-    abts_run_test(suite, test2_func, NULL);
-    abts_run_test(suite, test3_func, NULL);
+    abts_run_test(suite, direct_func, NULL);
+    abts_run_test(suite, failure_func, NULL);
+    abts_run_test(suite, cancel_func, NULL);
 
     return suite;
 }

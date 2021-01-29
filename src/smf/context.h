@@ -305,6 +305,7 @@ typedef struct smf_sess_s {
     /* Handover */
     struct {
         bool prepared;
+        bool direct_available;
         uint32_t gnb_n3_teid;
         ogs_ip_t gnb_n3_ip;
     } handover; /* Saved from N2-Handover Request Acknowledge */
