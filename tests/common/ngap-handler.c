@@ -604,8 +604,10 @@ void testngap_handle_pdu_session_resource_release_command(
 void testngap_handle_handover_request(
         test_ue_t *test_ue, ogs_ngap_message_t *message)
 {
-    int rv, i;
+    int rv, i, j, k;
     char buf[OGS_ADDRSTRLEN];
+
+    test_sess_t *sess = NULL;
 
     NGAP_NGAP_PDU_t pdu;
     NGAP_InitiatingMessage_t *initiatingMessage = NULL;
@@ -613,6 +615,13 @@ void testngap_handle_handover_request(
 
     NGAP_HandoverRequestIEs_t *ie = NULL;
     NGAP_AMF_UE_NGAP_ID_t *AMF_UE_NGAP_ID = NULL;
+    NGAP_PDUSessionResourceSetupListHOReq_t *PDUSessionList = NULL;
+    NGAP_PDUSessionResourceSetupItemHOReq_t *PDUSessionItem = NULL;
+
+    NGAP_PDUSessionResourceSetupRequestTransfer_t n2sm_message;
+    NGAP_PDUSessionResourceSetupRequestTransferIEs_t *ie2 = NULL;
+    OCTET_STRING_t *transfer = NULL;
+    ogs_pkbuf_t *n2smbuf = NULL;
 
     ogs_assert(test_ue);
     ogs_assert(message);
@@ -628,6 +637,8 @@ void testngap_handle_handover_request(
         case NGAP_ProtocolIE_ID_id_AMF_UE_NGAP_ID:
             AMF_UE_NGAP_ID = &ie->value.choice.AMF_UE_NGAP_ID;
             break;
+        case NGAP_ProtocolIE_ID_id_PDUSessionResourceSetupListHOReq:
+            PDUSessionList = &ie->value.choice.PDUSessionResourceSetupListHOReq;
         default:
             break;
         }
@@ -637,5 +648,46 @@ void testngap_handle_handover_request(
         uint64_t amf_ue_ngap_id;
         asn_INTEGER2ulong(AMF_UE_NGAP_ID, (unsigned long *)&amf_ue_ngap_id);
         test_ue->amf_ue_ngap_id = (uint64_t)amf_ue_ngap_id;
+    }
+
+    if (PDUSessionList) {
+        for (j = 0; j < PDUSessionList->list.count; j++) {
+            PDUSessionItem = (NGAP_PDUSessionResourceSetupItemHOReq_t *)
+                PDUSessionList->list.array[j];
+            ogs_assert(PDUSessionItem);
+
+            sess = test_sess_find_by_psi(
+                        test_ue, PDUSessionItem->pDUSessionID);
+            ogs_assert(sess);
+
+            transfer = &PDUSessionItem->handoverRequestTransfer;
+            ogs_assert(transfer);
+
+            n2smbuf = ogs_pkbuf_alloc(NULL, OGS_MAX_SDU_LEN);
+            ogs_assert(n2smbuf);
+            ogs_pkbuf_put_data(n2smbuf, transfer->buf, transfer->size);
+
+            rv = ogs_asn_decode(
+                    &asn_DEF_NGAP_PDUSessionResourceSetupRequestTransfer,
+                    &n2sm_message, sizeof(n2sm_message), n2smbuf);
+            ogs_assert(rv == OGS_OK);
+
+            for (k = 0; k < n2sm_message.protocolIEs.list.count; k++) {
+                ie2 = n2sm_message.protocolIEs.list.array[k];
+                switch (ie2->id) {
+                case NGAP_ProtocolIE_ID_id_DataForwardingNotPossible:
+                    ogs_fatal("asdkjfhasdfasdf");
+                    break;
+                default:
+                    break;
+                }
+            }
+
+            ogs_asn_free(
+                    &asn_DEF_NGAP_PDUSessionResourceSetupRequestTransfer,
+                    &n2sm_message);
+
+            ogs_pkbuf_free(n2smbuf);
+        }
     }
 }
