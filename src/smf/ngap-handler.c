@@ -472,6 +472,30 @@ int ngap_handle_handover_request_ack(
     ogs_asn_OCTET_STRING_to_uint32(&gTPTunnel->gTP_TEID,
             &sess->handover.gnb_n3_teid);
 
+    qosFlowSetupResponseList = &message.qosFlowSetupResponseList;
+    for (i = 0; i < qosFlowSetupResponseList->list.count; i++) {
+        qosFlowSetupResponseItem = (NGAP_QosFlowItemWithDataForwarding_t *)
+                qosFlowSetupResponseList->list.array[i];
+        if (qosFlowSetupResponseItem) {
+            qos_flow = smf_qos_flow_find_by_qfi(sess,
+                    qosFlowSetupResponseItem->qosFlowIdentifier);
+
+            if (qos_flow) {
+                dl_far = qos_flow->dl_far;
+                ogs_assert(dl_far);
+
+                dl_far->handover.prepared = true;
+
+            } else {
+                ogs_error("[%s:%d] No QoS flow", smf_ue->supi, sess->psi);
+                smf_sbi_send_sm_context_update_error(stream,
+                        OGS_SBI_HTTP_STATUS_BAD_REQUEST,
+                        "No QoS flow", smf_ue->supi, NULL, NULL);
+                goto cleanup;
+            }
+        }
+    }
+
     dLForwardingUP_TNLInformation = message.dLForwardingUP_TNLInformation;
     if (dLForwardingUP_TNLInformation) {
         if (dLForwardingUP_TNLInformation->present !=
@@ -501,41 +525,31 @@ int ngap_handle_handover_request_ack(
                 &sess->handover.gnb_dl_teid);
 
         sess->handover.indirect_dl_forwarding = true;
-        ogs_fatal("asdflijasdfsadF");
     }
 
     sess->handover.prepared = true;
 
-    qosFlowSetupResponseList = &message.qosFlowSetupResponseList;
-    for (i = 0; i < qosFlowSetupResponseList->list.count; i++) {
-        qosFlowSetupResponseItem = (NGAP_QosFlowItemWithDataForwarding_t *)
-                qosFlowSetupResponseList->list.array[i];
-        if (qosFlowSetupResponseItem) {
-            qos_flow = smf_qos_flow_find_by_qfi(sess,
-                    qosFlowSetupResponseItem->qosFlowIdentifier);
+    if (sess->handover.indirect_dl_forwarding == true) {
+        n2smbuf = ngap_build_handover_command_transfer(sess);
+        ogs_assert(n2smbuf);
 
-            if (qos_flow) {
-                dl_far = qos_flow->dl_far;
-                ogs_assert(dl_far);
+        smf_sbi_send_sm_context_updated_data(
+            sess, stream, 0, OpenAPI_ho_state_PREPARED,
+            NULL, OpenAPI_n2_sm_info_type_HANDOVER_CMD, n2smbuf);
 
-                dl_far->handover.prepared = true;
+#if 0
+        smf_5gc_pfcp_send_session_modification_request(
+                sess, stream,
+                OGS_PFCP_MODIFY_INDIRECT|OGS_PFCP_MODIFY_CREATE);
+#endif
+    } else {
+        n2smbuf = ngap_build_handover_command_transfer(sess);
+        ogs_assert(n2smbuf);
 
-            } else {
-                ogs_error("[%s:%d] No QoS flow", smf_ue->supi, sess->psi);
-                smf_sbi_send_sm_context_update_error(stream,
-                        OGS_SBI_HTTP_STATUS_BAD_REQUEST,
-                        "No QoS flow", smf_ue->supi, NULL, NULL);
-                goto cleanup;
-            }
-        }
+        smf_sbi_send_sm_context_updated_data(
+            sess, stream, 0, OpenAPI_ho_state_PREPARED,
+            NULL, OpenAPI_n2_sm_info_type_HANDOVER_CMD, n2smbuf);
     }
-
-    n2smbuf = ngap_build_handover_command_transfer(sess);
-    ogs_assert(n2smbuf);
-
-    smf_sbi_send_sm_context_updated_data(
-        sess, stream, 0, OpenAPI_ho_state_PREPARED,
-        NULL, OpenAPI_n2_sm_info_type_HANDOVER_CMD, n2smbuf);
 
     rv = OGS_OK;
 
