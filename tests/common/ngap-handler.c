@@ -676,7 +676,7 @@ void testngap_handle_handover_request(
                 ie2 = n2sm_message.protocolIEs.list.array[k];
                 switch (ie2->id) {
                 case NGAP_ProtocolIE_ID_id_DataForwardingNotPossible:
-                    ogs_fatal("asdkjfhasdfasdf");
+                    sess->handover.data_forwarding_not_possible = true;
                     break;
                 default:
                     break;

@@ -418,6 +418,10 @@ typedef struct test_sess_s {
     test_pdn_connectivity_param_t pdn_connectivity_param;
     test_esm_information_param_t esm_information_param;
 
+    struct {
+        bool data_forwarding_not_possible;
+    } handover;
+
     ogs_list_t bearer_list;
 
     test_ue_t *test_ue;

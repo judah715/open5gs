@@ -1672,8 +1672,7 @@ ogs_pkbuf_t *testngap_build_handover_request_ack(test_ue_t *test_ue)
             PDUSessionList = &ie->value.choice.PDUSessionResourceAdmittedList;
         }
 
-        PDUSessionItem = CALLOC(1,
-                sizeof(struct NGAP_PDUSessionResourceAdmittedItem));
+        PDUSessionItem = CALLOC(1, sizeof(*PDUSessionItem));
         ogs_assert(PDUSessionItem);
         ASN_SEQUENCE_ADD(&PDUSessionList->list, PDUSessionItem);
 
