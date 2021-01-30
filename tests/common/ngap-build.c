@@ -2243,7 +2243,7 @@ static ogs_pkbuf_t *testngap_build_handover_request_ack_transfer(
 
         ogs_asn_ip_to_BIT_STRING(&ip,
                 &gTPTunnelForDLForwarding->transportLayerAddress);
-        ogs_asn_uint32_to_OCTET_STRING(sess->gnb_n3_teid,
+        ogs_asn_uint32_to_OCTET_STRING(sess->gnb_n3_teid+10,
                 &gTPTunnelForDLForwarding->gTP_TEID);
     }
 

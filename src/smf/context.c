@@ -1445,7 +1445,7 @@ smf_bearer_t *smf_indirect_data_forwarding_add(smf_sess_t *sess)
     if (sess->pfcp_node->up_function_features.ftup) {
         dl_pdr->f_teid.ch = 1;
         dl_pdr->f_teid.chid = 1;
-        dl_pdr->f_teid.choose_id = OGS_PFCP_DEFAULT_CHOOSE_ID;
+        dl_pdr->f_teid.choose_id = OGS_PFCP_INDIRECT_DATA_FORWARDING_CHOOSE_ID;
         dl_pdr->f_teid_len = 2;
     } else {
         ogs_assert(sess->upf_n3_addr || sess->upf_n3_addr6);
