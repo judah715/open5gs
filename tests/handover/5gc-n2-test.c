@@ -2289,7 +2289,6 @@ static void indirect_func(abts_case *tc, void *data)
     ABTS_PTR_NOTNULL(tc, recvbuf);
     testngap_recv(test_ue, recvbuf);
 
-#if 0
     /* Send HandoverRequestAcknoledge */
     ogs_list_for_each(&test_ue->sess_list, sess)
         sess->gnb_n3_addr = test_self()->gnb2_addr;
@@ -2304,6 +2303,7 @@ static void indirect_func(abts_case *tc, void *data)
     ABTS_PTR_NOTNULL(tc, recvbuf);
     testngap_recv(test_ue, recvbuf);
 
+#if 0
     /* Send UplinkRANStatusTransfer */
     amf_ue_ngap_id = test_ue->amf_ue_ngap_id--;
     ran_ue_ngap_id = test_ue->ran_ue_ngap_id--;
@@ -2570,7 +2570,7 @@ abts_suite *test_5gc_n2(abts_suite *suite)
 {
     suite = ADD_SUITE(suite)
 
-#if 1
+#if 0
     abts_run_test(suite, direct_func, NULL);
     abts_run_test(suite, failure_func, NULL);
     abts_run_test(suite, cancel_func, NULL);

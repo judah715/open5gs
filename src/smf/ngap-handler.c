@@ -418,6 +418,7 @@ int ngap_handle_handover_request_ack(
     NGAP_HandoverRequestAcknowledgeTransfer_t message;
 
     NGAP_UPTransportLayerInformation_t *dL_NGU_UP_TNLInformation = NULL;
+    NGAP_UPTransportLayerInformation_t *dLForwardingUP_TNLInformation = NULL;
     NGAP_QosFlowListWithDataForwarding_t *qosFlowSetupResponseList = NULL;
     NGAP_QosFlowItemWithDataForwarding_t *qosFlowSetupResponseItem = NULL;
     NGAP_GTPTunnel_t *gTPTunnel = NULL;
@@ -466,11 +467,43 @@ int ngap_handle_handover_request_ack(
         goto cleanup;
     }
 
-    /* Store FAR */
     ogs_asn_BIT_STRING_to_ip(&gTPTunnel->transportLayerAddress,
             &sess->handover.gnb_n3_ip);
     ogs_asn_OCTET_STRING_to_uint32(&gTPTunnel->gTP_TEID,
             &sess->handover.gnb_n3_teid);
+
+    dLForwardingUP_TNLInformation = message.dLForwardingUP_TNLInformation;
+    if (dLForwardingUP_TNLInformation) {
+        if (dLForwardingUP_TNLInformation->present !=
+                NGAP_UPTransportLayerInformation_PR_gTPTunnel) {
+            ogs_error(
+                "[%s:%d] Unknown dLForwardingUP_TNLInformation->present [%d]",
+                smf_ue->supi, sess->psi, dL_NGU_UP_TNLInformation->present);
+            smf_sbi_send_sm_context_update_error(stream,
+                    OGS_SBI_HTTP_STATUS_BAD_REQUEST,
+                    "Unknown dLForwardingUP_TNLInformation->present",
+                    smf_ue->supi, NULL, NULL);
+            goto cleanup;
+        }
+
+        gTPTunnel = dLForwardingUP_TNLInformation->choice.gTPTunnel;
+        if (!gTPTunnel) {
+            ogs_error("[%s:%d] No GTPTunnel", smf_ue->supi, sess->psi);
+            smf_sbi_send_sm_context_update_error(stream,
+                    OGS_SBI_HTTP_STATUS_BAD_REQUEST,
+                    "No GTPTunnel", smf_ue->supi, NULL, NULL);
+            goto cleanup;
+        }
+
+        ogs_asn_BIT_STRING_to_ip(&gTPTunnel->transportLayerAddress,
+                &sess->handover.gnb_dl_ip);
+        ogs_asn_OCTET_STRING_to_uint32(&gTPTunnel->gTP_TEID,
+                &sess->handover.gnb_dl_teid);
+
+        sess->handover.indirect_dl_forwarding = true;
+        ogs_fatal("asdflijasdfsadF");
+    }
+
     sess->handover.prepared = true;
 
     qosFlowSetupResponseList = &message.qosFlowSetupResponseList;

@@ -306,8 +306,14 @@ typedef struct smf_sess_s {
     struct {
         bool prepared;
         bool direct_available;
+        bool indirect_dl_forwarding;
+
         uint32_t gnb_n3_teid;
         ogs_ip_t gnb_n3_ip;
+
+        /* Indirect DL Forwarding */
+        uint32_t gnb_dl_teid;
+        ogs_ip_t gnb_dl_ip;
     } handover; /* Saved from N2-Handover Request Acknowledge */
 
     ogs_list_t      bearer_list;
