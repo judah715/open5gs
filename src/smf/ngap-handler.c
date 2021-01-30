@@ -26,7 +26,6 @@ int ngap_handle_pdu_session_resource_setup_response_transfer(
         smf_sess_t *sess, ogs_sbi_stream_t *stream, ogs_pkbuf_t *pkbuf)
 {
     smf_ue_t *smf_ue = NULL;
-    smf_bearer_t *qos_flow = NULL;
     int rv, i;
 
     uint32_t gnb_n3_teid;
@@ -111,8 +110,8 @@ int ngap_handle_pdu_session_resource_setup_response_transfer(
                 associatedQosFlowList->list.array[i];
 
         if (associatedQosFlowItem) {
-            qos_flow = smf_qos_flow_find_by_qfi(sess,
-                    associatedQosFlowItem->qosFlowIdentifier);
+            smf_bearer_t *qos_flow = smf_qos_flow_find_by_qfi(
+                    sess, associatedQosFlowItem->qosFlowIdentifier);
 
             if (qos_flow) {
                 dl_far = qos_flow->dl_far;
@@ -235,7 +234,6 @@ int ngap_handle_path_switch_request_transfer(
         smf_sess_t *sess, ogs_sbi_stream_t *stream, ogs_pkbuf_t *pkbuf)
 {
     smf_ue_t *smf_ue = NULL;
-    smf_bearer_t *qos_flow = NULL;
     int rv, i;
 
     uint32_t gnb_n3_teid;
@@ -311,8 +309,8 @@ int ngap_handle_path_switch_request_transfer(
         acceptedQosFlowItem = (NGAP_QosFlowAcceptedItem_t *)
                 qosFlowAcceptedList->list.array[i];
         if (acceptedQosFlowItem) {
-            qos_flow = smf_qos_flow_find_by_qfi(sess,
-                    acceptedQosFlowItem->qosFlowIdentifier);
+            smf_bearer_t *qos_flow = smf_qos_flow_find_by_qfi(
+                    sess, acceptedQosFlowItem->qosFlowIdentifier);
 
             if (qos_flow) {
                 dl_far = qos_flow->dl_far;
@@ -410,7 +408,6 @@ int ngap_handle_handover_request_ack(
         smf_sess_t *sess, ogs_sbi_stream_t *stream, ogs_pkbuf_t *pkbuf)
 {
     smf_ue_t *smf_ue = NULL;
-    smf_bearer_t *qos_flow = NULL;
     int rv, i;
 
     ogs_pfcp_far_t *dl_far = NULL;
@@ -422,8 +419,6 @@ int ngap_handle_handover_request_ack(
     NGAP_QosFlowListWithDataForwarding_t *qosFlowSetupResponseList = NULL;
     NGAP_QosFlowItemWithDataForwarding_t *qosFlowSetupResponseItem = NULL;
     NGAP_GTPTunnel_t *gTPTunnel = NULL;
-
-    ogs_pkbuf_t *n2smbuf = NULL;
 
     ogs_assert(pkbuf);
     ogs_assert(stream);
@@ -477,8 +472,8 @@ int ngap_handle_handover_request_ack(
         qosFlowSetupResponseItem = (NGAP_QosFlowItemWithDataForwarding_t *)
                 qosFlowSetupResponseList->list.array[i];
         if (qosFlowSetupResponseItem) {
-            qos_flow = smf_qos_flow_find_by_qfi(sess,
-                    qosFlowSetupResponseItem->qosFlowIdentifier);
+            smf_bearer_t *qos_flow = smf_qos_flow_find_by_qfi(
+                    sess, qosFlowSetupResponseItem->qosFlowIdentifier);
 
             if (qos_flow) {
                 dl_far = qos_flow->dl_far;
@@ -530,20 +525,14 @@ int ngap_handle_handover_request_ack(
     sess->handover.prepared = true;
 
     if (sess->handover.indirect_dl_forwarding == true) {
-        n2smbuf = ngap_build_handover_command_transfer(sess);
-        ogs_assert(n2smbuf);
+        smf_bearer_t *qos_flow = smf_indirect_data_forwarding_add(sess);
+        ogs_assert(qos_flow);
 
-        smf_sbi_send_sm_context_updated_data(
-            sess, stream, 0, OpenAPI_ho_state_PREPARED,
-            NULL, OpenAPI_n2_sm_info_type_HANDOVER_CMD, n2smbuf);
-
-#if 0
-        smf_5gc_pfcp_send_session_modification_request(
-                sess, stream,
+        smf_5gc_pfcp_send_qos_flow_modification_request(
+                qos_flow, stream,
                 OGS_PFCP_MODIFY_INDIRECT|OGS_PFCP_MODIFY_CREATE);
-#endif
     } else {
-        n2smbuf = ngap_build_handover_command_transfer(sess);
+        ogs_pkbuf_t *n2smbuf = ngap_build_handover_command_transfer(sess);
         ogs_assert(n2smbuf);
 
         smf_sbi_send_sm_context_updated_data(

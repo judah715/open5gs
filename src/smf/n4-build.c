@@ -292,7 +292,8 @@ ogs_pkbuf_t *smf_n4_build_qos_flow_modification_request(
                         OGS_PFCP_APPLY_ACTION_FORW) {
 
                     if (modify_flags & OGS_PFCP_MODIFY_END_MARKER) {
-                        qos_flow->dl_far->smreq_flags.send_end_marker_packets = 1;
+                        qos_flow->dl_far->
+                            smreq_flags.send_end_marker_packets = 1;
                     }
 
                     ogs_pfcp_build_update_far_activate(

@@ -337,18 +337,28 @@ void smf_5gc_n4_handle_session_modification_response(
                     sess, stream, OpenAPI_up_cnx_state_DEACTIVATED);
         }
     } else if (flags & OGS_PFCP_MODIFY_CREATE) {
-        smf_n1_n2_message_transfer_param_t param;
+        if (flags & OGS_PFCP_MODIFY_INDIRECT) {
+            ogs_pkbuf_t *n2smbuf = ngap_build_handover_command_transfer(sess);
+            ogs_assert(n2smbuf);
 
-        memset(&param, 0, sizeof(param));
-        param.state = SMF_NETWORK_REQUESTED_QOS_FLOW_MODIFICATION;
-        param.n1smbuf = gsm_build_qos_flow_modification_command(
-                qos_flow, OGS_NAS_PROCEDURE_TRANSACTION_IDENTITY_UNASSIGNED);
-        ogs_assert(param.n1smbuf);
-        param.n2smbuf = ngap_build_qos_flow_resource_modify_request_transfer(
-                qos_flow);
-        ogs_assert(param.n2smbuf);
+            smf_sbi_send_sm_context_updated_data(
+                sess, stream, 0, OpenAPI_ho_state_PREPARED,
+                NULL, OpenAPI_n2_sm_info_type_HANDOVER_CMD, n2smbuf);
 
-        smf_namf_comm_send_n1_n2_message_transfer(sess, &param);
+        } else {
+            smf_n1_n2_message_transfer_param_t param;
+
+            memset(&param, 0, sizeof(param));
+            param.state = SMF_NETWORK_REQUESTED_QOS_FLOW_MODIFICATION;
+            param.n1smbuf = gsm_build_qos_flow_modification_command(qos_flow,
+                    OGS_NAS_PROCEDURE_TRANSACTION_IDENTITY_UNASSIGNED);
+            ogs_assert(param.n1smbuf);
+            param.n2smbuf =
+                ngap_build_qos_flow_resource_modify_request_transfer(qos_flow);
+            ogs_assert(param.n2smbuf);
+
+            smf_namf_comm_send_n1_n2_message_transfer(sess, &param);
+        }
     }
 }
 
