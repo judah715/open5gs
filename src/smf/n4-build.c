@@ -113,9 +113,10 @@ ogs_pkbuf_t *smf_n4_build_session_modification_request(
 {
     int i;
 
+    smf_bearer_t *qos_flow = NULL;
+
     ogs_pfcp_message_t pfcp_message;
     ogs_pfcp_session_modification_request_t *req = NULL;
-    ogs_pfcp_far_t *far = NULL;
     ogs_pkbuf_t *pkbuf = NULL;
 
     ogs_debug("Session Modification Request");
@@ -126,31 +127,35 @@ ogs_pkbuf_t *smf_n4_build_session_modification_request(
     memset(&pfcp_message, 0, sizeof(ogs_pfcp_message_t));
 
     i = 0;
-    ogs_list_for_each(&sess->pfcp.far_list, far) {
+    ogs_list_for_each(&sess->bearer_list, qos_flow) {
+        if (modify_flags & OGS_PFCP_MODIFY_ACTIVATE) {
 
-        /* Update FAR - Only DL */
-        if (far->dst_if == OGS_PFCP_INTERFACE_ACCESS) {
-
-            if (modify_flags & OGS_PFCP_MODIFY_ACTIVATE) {
-
-                if (far->apply_action & OGS_PFCP_APPLY_ACTION_FORW) {
+            /* Update FAR - Only DL */
+            if (qos_flow->dl_far) {
+                if (qos_flow->dl_far->apply_action &
+                        OGS_PFCP_APPLY_ACTION_FORW) {
 
                     if (modify_flags & OGS_PFCP_MODIFY_END_MARKER) {
-                        far->smreq_flags.send_end_marker_packets = 1;
+                        qos_flow->dl_far->
+                            smreq_flags.send_end_marker_packets = 1;
                     }
 
                     ogs_pfcp_build_update_far_activate(
-                            &req->update_far[i], i, far);
+                            &req->update_far[i], i, qos_flow->dl_far);
 
                     /* Clear all FAR flags */
-                    far->smreq_flags.value = 0;
-                }
+                    qos_flow->dl_far->smreq_flags.value = 0;
 
-            } else if (modify_flags & OGS_PFCP_MODIFY_DEACTIVATE) {
-                ogs_pfcp_build_update_far_deactivate(
-                        &req->update_far[i], i, far);
+                    i++;
+                }
             }
-            i++;
+
+        } else if (modify_flags & OGS_PFCP_MODIFY_DEACTIVATE) {
+            if (qos_flow->dl_far) {
+                ogs_pfcp_build_update_far_deactivate(
+                        &req->update_far[i], i, qos_flow->dl_far);
+                i++;
+            }
         }
     }
 
