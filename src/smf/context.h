@@ -306,7 +306,7 @@ typedef struct smf_sess_s {
     struct {
         bool prepared;
         bool direct_available;
-        bool indirect_dl_forwarding;
+        bool indirect_data_forwarding;
 
         /* NG-U UP Transport Information Saved Temporally */
         uint32_t gnb_n3_teid;

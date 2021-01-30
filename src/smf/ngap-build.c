@@ -374,7 +374,7 @@ ogs_pkbuf_t *ngap_build_handover_command_transfer(smf_sess_t *sess)
     ogs_debug("HandoverCommandTransfer");
     memset(&message, 0, sizeof(NGAP_HandoverCommandTransfer_t));
 
-    if (sess->handover.indirect_dl_forwarding == true) {
+    if (sess->handover.indirect_data_forwarding == true) {
         message.dLForwardingUP_TNLInformation = dLForwardingUP_TNLInformation =
             CALLOC(1, sizeof(*dLForwardingUP_TNLInformation));
         ogs_assert(dLForwardingUP_TNLInformation);

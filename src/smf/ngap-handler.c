@@ -515,12 +515,12 @@ int ngap_handle_handover_request_ack(
         ogs_asn_OCTET_STRING_to_uint32(&gTPTunnel->gTP_TEID,
                 &sess->handover.gnb_dl_teid);
 
-        sess->handover.indirect_dl_forwarding = true;
+        sess->handover.indirect_data_forwarding = true;
     }
 
     sess->handover.prepared = true;
 
-    if (sess->handover.indirect_dl_forwarding == true) {
+    if (sess->handover.indirect_data_forwarding == true) {
         smf_bearer_t *qos_flow = NULL;
 
         qos_flow = smf_indirect_data_forwarding_add(sess);
