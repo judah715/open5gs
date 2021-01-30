@@ -313,6 +313,10 @@ typedef struct smf_sess_s {
         ogs_ip_t gnb_n3_ip;
 
         /* Indirect DL Forwarding */
+        uint32_t        upf_dl_teid;
+        ogs_sockaddr_t  *upf_dl_addr;
+        ogs_sockaddr_t  *upf_dl_addr6;
+
         uint32_t gnb_dl_teid;
         ogs_ip_t gnb_dl_ip;
     } handover;

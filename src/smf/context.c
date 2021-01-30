@@ -1171,6 +1171,11 @@ void smf_sess_remove(smf_sess_t *sess)
     if (sess->upf_n3_addr6)
         ogs_freeaddrinfo(sess->upf_n3_addr6);
 
+    if (sess->handover.upf_dl_addr)
+        ogs_freeaddrinfo(sess->handover.upf_dl_addr);
+    if (sess->handover.upf_dl_addr6)
+        ogs_freeaddrinfo(sess->handover.upf_dl_addr6);
+
     if (sess->pcf_id)
         ogs_free(sess->pcf_id);
 

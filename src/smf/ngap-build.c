@@ -364,7 +364,7 @@ ogs_pkbuf_t *ngap_build_handover_command_transfer(smf_sess_t *sess)
 {
     NGAP_HandoverCommandTransfer_t message;
 
-    ogs_ip_t upf_n3_ip;
+    ogs_ip_t upf_dl_ip;
 
     NGAP_UPTransportLayerInformation_t *dLForwardingUP_TNLInformation = NULL;
     NGAP_GTPTunnel_t *gTPTunnel = NULL;
@@ -374,19 +374,24 @@ ogs_pkbuf_t *ngap_build_handover_command_transfer(smf_sess_t *sess)
     ogs_debug("HandoverCommandTransfer");
     memset(&message, 0, sizeof(NGAP_HandoverCommandTransfer_t));
 
-    message.dLForwardingUP_TNLInformation = dLForwardingUP_TNLInformation =
-        CALLOC(1, sizeof(*dLForwardingUP_TNLInformation));
-    ogs_assert(dLForwardingUP_TNLInformation);
+    if (sess->handover.indirect_dl_forwarding == true) {
+        message.dLForwardingUP_TNLInformation = dLForwardingUP_TNLInformation =
+            CALLOC(1, sizeof(*dLForwardingUP_TNLInformation));
+        ogs_assert(dLForwardingUP_TNLInformation);
 
-    dLForwardingUP_TNLInformation->present =
-        NGAP_UPTransportLayerInformation_PR_gTPTunnel;
-    dLForwardingUP_TNLInformation->choice.gTPTunnel = gTPTunnel =
-        CALLOC(1, sizeof(*gTPTunnel));
-    ogs_assert(gTPTunnel);
+        dLForwardingUP_TNLInformation->present =
+            NGAP_UPTransportLayerInformation_PR_gTPTunnel;
+        dLForwardingUP_TNLInformation->choice.gTPTunnel = gTPTunnel =
+            CALLOC(1, sizeof(*gTPTunnel));
+        ogs_assert(gTPTunnel);
 
-    ogs_sockaddr_to_ip(sess->upf_n3_addr, sess->upf_n3_addr6, &upf_n3_ip);
-    ogs_asn_ip_to_BIT_STRING(&upf_n3_ip, &gTPTunnel->transportLayerAddress);
-    ogs_asn_uint32_to_OCTET_STRING(sess->upf_n3_teid, &gTPTunnel->gTP_TEID);
+        ogs_sockaddr_to_ip(
+                sess->handover.upf_dl_addr, sess->handover.upf_dl_addr6,
+                &upf_dl_ip);
+        ogs_asn_ip_to_BIT_STRING(&upf_dl_ip, &gTPTunnel->transportLayerAddress);
+        ogs_asn_uint32_to_OCTET_STRING(
+                sess->handover.upf_dl_teid, &gTPTunnel->gTP_TEID);
+    }
 
     return ogs_asn_encode(&asn_DEF_NGAP_HandoverCommandTransfer, &message);
 }
