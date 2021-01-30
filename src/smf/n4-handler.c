@@ -264,15 +264,23 @@ void smf_5gc_n4_handle_session_modification_response(
             ogs_assert(sess->pfcp_node);
             if (sess->pfcp_node->up_function_features.ftup &&
                 pdr->f_teid_len) {
-                if (sess->upf_n3_addr)
-                    ogs_freeaddrinfo(sess->upf_n3_addr);
-                if (sess->upf_n3_addr6)
-                    ogs_freeaddrinfo(sess->upf_n3_addr6);
 
-                ogs_pfcp_f_teid_to_sockaddr(
-                        &pdr->f_teid, pdr->f_teid_len,
-                        &sess->upf_n3_addr, &sess->upf_n3_addr6);
-                sess->upf_n3_teid = pdr->f_teid.teid;
+                ogs_pfcp_far_t *far = pdr->far;
+                ogs_assert(far);
+
+                if (far->dst_if == OGS_PFCP_INTERFACE_CORE) {
+                    if (sess->upf_n3_addr)
+                        ogs_freeaddrinfo(sess->upf_n3_addr);
+                    if (sess->upf_n3_addr6)
+                        ogs_freeaddrinfo(sess->upf_n3_addr6);
+
+                    ogs_pfcp_f_teid_to_sockaddr(
+                            &pdr->f_teid, pdr->f_teid_len,
+                            &sess->upf_n3_addr, &sess->upf_n3_addr6);
+                    sess->upf_n3_teid = pdr->f_teid.teid;
+                } else if (far->dst_if == OGS_PFCP_INTERFACE_ACCESS) {
+                    ogs_fatal("asdklfjasdfasdf");
+                }
             }
         }
 
