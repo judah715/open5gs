@@ -366,15 +366,19 @@ ogs_pkbuf_t *ngap_build_handover_command_transfer(smf_sess_t *sess)
 
     ogs_ip_t upf_dl_ip;
 
-    NGAP_UPTransportLayerInformation_t *dLForwardingUP_TNLInformation = NULL;
-    NGAP_GTPTunnel_t *gTPTunnel = NULL;
-
     ogs_assert(sess);
 
     ogs_debug("HandoverCommandTransfer");
     memset(&message, 0, sizeof(NGAP_HandoverCommandTransfer_t));
 
     if (sess->handover.indirect_data_forwarding == true) {
+        ogs_pfcp_pdr_t *pdr = NULL;
+
+        NGAP_UPTransportLayerInformation_t
+            *dLForwardingUP_TNLInformation = NULL;
+        NGAP_GTPTunnel_t *gTPTunnel = NULL;
+        NGAP_QosFlowToBeForwardedList_t *qosFlowToBeForwardedList = NULL;
+
         message.dLForwardingUP_TNLInformation = dLForwardingUP_TNLInformation =
             CALLOC(1, sizeof(*dLForwardingUP_TNLInformation));
         ogs_assert(dLForwardingUP_TNLInformation);
@@ -391,6 +395,38 @@ ogs_pkbuf_t *ngap_build_handover_command_transfer(smf_sess_t *sess)
         ogs_asn_ip_to_BIT_STRING(&upf_dl_ip, &gTPTunnel->transportLayerAddress);
         ogs_asn_uint32_to_OCTET_STRING(
                 sess->handover.upf_dl_teid, &gTPTunnel->gTP_TEID);
+
+        ogs_list_for_each(&sess->pfcp.pdr_list, pdr) {
+            ogs_pfcp_far_t *far = pdr->far;
+            ogs_assert(far);
+
+            if (pdr->src_if == OGS_PFCP_INTERFACE_ACCESS &&
+                far->dst_if == OGS_PFCP_INTERFACE_ACCESS) {
+                NGAP_QosFlowToBeForwardedItem_t *qosFlowToBeForwardedItem;
+                NGAP_QosFlowIdentifier_t *qosFlowIdentifier = NULL;
+
+                /* Indirect Data Forwarding */
+                if (!qosFlowToBeForwardedList) {
+                    message.qosFlowToBeForwardedList =
+                        qosFlowToBeForwardedList =
+                            CALLOC(1, sizeof(*qosFlowToBeForwardedList));
+                    ogs_assert(qosFlowToBeForwardedList);
+                }
+
+                qosFlowToBeForwardedItem =
+                    CALLOC(1, sizeof(*qosFlowToBeForwardedItem));
+                ogs_assert(qosFlowToBeForwardedItem);
+
+                ASN_SEQUENCE_ADD(&qosFlowToBeForwardedList->list,
+                        qosFlowToBeForwardedItem);
+
+                qosFlowIdentifier =
+                    &qosFlowToBeForwardedItem->qosFlowIdentifier;
+
+                *qosFlowIdentifier = pdr->qfi;
+            }
+
+        }
     }
 
     return ogs_asn_encode(&asn_DEF_NGAP_HandoverCommandTransfer, &message);
