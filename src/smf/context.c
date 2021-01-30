@@ -1619,14 +1619,14 @@ int smf_bearer_remove(smf_bearer_t *bearer)
 
     ogs_list_remove(&bearer->sess->bearer_list, bearer);
 
-    if (bearer->dl_pdr)
-        ogs_pfcp_pdr_remove(bearer->dl_pdr);
-    if (bearer->ul_pdr)
-        ogs_pfcp_pdr_remove(bearer->ul_pdr);
-    if (bearer->dl_far)
-        ogs_pfcp_far_remove(bearer->dl_far);
-    if (bearer->ul_far)
-        ogs_pfcp_far_remove(bearer->ul_far);
+    ogs_assert(bearer->dl_pdr);
+    ogs_pfcp_pdr_remove(bearer->dl_pdr);
+    ogs_assert(bearer->ul_pdr);
+    ogs_pfcp_pdr_remove(bearer->ul_pdr);
+    ogs_assert(bearer->dl_far);
+    ogs_pfcp_far_remove(bearer->dl_far);
+    ogs_assert(bearer->ul_far);
+    ogs_pfcp_far_remove(bearer->ul_far);
     if (bearer->qer)
         ogs_pfcp_qer_remove(bearer->qer);
 
