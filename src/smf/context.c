@@ -1276,8 +1276,7 @@ smf_sess_t *smf_sess_find_by_paging_n1n2message_location(
             n1n2message_location, strlen(n1n2message_location));
 }
 
-static smf_bearer_t *qos_flow_add(
-        smf_sess_t *sess, bool indirect_data_forwarding)
+smf_bearer_t *smf_qos_flow_add(smf_sess_t *sess)
 {
     smf_bearer_t *qos_flow = NULL;
 
@@ -1305,10 +1304,7 @@ static smf_bearer_t *qos_flow_add(
     ogs_assert(dl_pdr);
     qos_flow->dl_pdr = dl_pdr;
 
-    if (indirect_data_forwarding == true)
-        dl_pdr->src_if = OGS_PFCP_INTERFACE_ACCESS;
-    else
-        dl_pdr->src_if = OGS_PFCP_INTERFACE_CORE;
+    dl_pdr->src_if = OGS_PFCP_INTERFACE_CORE;
 
     if (strlen(sess->pdn.apn))
         dl_pdr->apn = ogs_strdup(sess->pdn.apn);
@@ -1342,21 +1338,15 @@ static smf_bearer_t *qos_flow_add(
     dl_far->dst_if = OGS_PFCP_INTERFACE_ACCESS;
     ogs_pfcp_pdr_associate_far(dl_pdr, dl_far);
 
-    if (indirect_data_forwarding == true)
-        dl_far->apply_action = OGS_PFCP_APPLY_ACTION_FORW;
-    else
-        dl_far->apply_action =
-            OGS_PFCP_APPLY_ACTION_BUFF| OGS_PFCP_APPLY_ACTION_NOCP;
+    dl_far->apply_action =
+        OGS_PFCP_APPLY_ACTION_BUFF| OGS_PFCP_APPLY_ACTION_NOCP;
     ogs_assert(sess->pfcp.bar);
 
     ul_far = ogs_pfcp_far_add(&sess->pfcp);
     ogs_assert(ul_far);
     qos_flow->ul_far = ul_far;
 
-    if (indirect_data_forwarding == true)
-        ul_far->dst_if = OGS_PFCP_INTERFACE_ACCESS;
-    else
-        ul_far->dst_if = OGS_PFCP_INTERFACE_CORE;
+    ul_far->dst_if = OGS_PFCP_INTERFACE_CORE;
     ogs_pfcp_pdr_associate_far(ul_pdr, ul_far);
 
     ul_far->apply_action = OGS_PFCP_APPLY_ACTION_FORW;
@@ -1381,14 +1371,71 @@ static smf_bearer_t *qos_flow_add(
     return qos_flow;
 }
 
-smf_bearer_t *smf_qos_flow_add(smf_sess_t *sess)
-{
-    return qos_flow_add(sess, false);
-}
-
 smf_bearer_t *smf_indirect_data_forwarding_add(smf_sess_t *sess)
 {
-    return qos_flow_add(sess, true);
+    smf_bearer_t *qos_flow = NULL;
+
+    ogs_pfcp_pdr_t *dl_pdr = NULL;
+    ogs_pfcp_pdr_t *ul_pdr = NULL;
+    ogs_pfcp_far_t *dl_far = NULL;
+    ogs_pfcp_far_t *ul_far = NULL;
+
+    qos_flow = smf_qos_flow_add(sess);
+    ogs_assert(qos_flow);
+
+    dl_pdr = qos_flow->dl_pdr;
+    ogs_assert(dl_pdr);
+    ul_pdr = qos_flow->ul_pdr;
+    ogs_assert(ul_pdr);
+    dl_far = qos_flow->dl_far;
+    ogs_assert(dl_far);
+    ul_far = qos_flow->ul_far;
+    ogs_assert(ul_far);
+
+    ogs_assert(sess->pfcp_node);
+    if (sess->pfcp_node->up_function_features.ftup) {
+        dl_pdr->f_teid.ch = 1;
+        dl_pdr->f_teid.chid = 1;
+        dl_pdr->f_teid.choose_id = OGS_PFCP_DEFAULT_CHOOSE_ID;
+        dl_pdr->f_teid_len = 2;
+
+        ul_pdr->f_teid.ch = 1;
+        ul_pdr->f_teid.chid = 1;
+        ul_pdr->f_teid.choose_id = OGS_PFCP_DEFAULT_CHOOSE_ID;
+        ul_pdr->f_teid_len = 2;
+    } else {
+        ogs_assert(sess->upf_n3_addr || sess->upf_n3_addr6);
+
+        ogs_pfcp_sockaddr_to_f_teid(
+                sess->upf_n3_addr, sess->upf_n3_addr6,
+                &dl_pdr->f_teid, &dl_pdr->f_teid_len);
+        dl_pdr->f_teid.teid = sess->upf_n3_teid;
+
+        ogs_pfcp_sockaddr_to_f_teid(
+                sess->upf_n3_addr, sess->upf_n3_addr6,
+                &ul_pdr->f_teid, &ul_pdr->f_teid_len);
+        ul_pdr->f_teid.teid = sess->upf_n3_teid;
+    }
+
+    dl_pdr->src_if = OGS_PFCP_INTERFACE_ACCESS;
+    ul_far->dst_if = OGS_PFCP_INTERFACE_ACCESS;
+
+    dl_far->apply_action = OGS_PFCP_APPLY_ACTION_FORW;
+    ul_far->apply_action = OGS_PFCP_APPLY_ACTION_FORW;
+
+    ogs_pfcp_ip_to_outer_header_creation(
+            &sess->handover.gnb_dl_ip,
+            &dl_far->outer_header_creation,
+            &dl_far->outer_header_creation_len);
+    dl_far->outer_header_creation.teid = sess->handover.gnb_dl_teid;
+    ogs_pfcp_ip_to_outer_header_creation(
+            &sess->handover.gnb_dl_ip,
+            &ul_far->outer_header_creation,
+            &ul_far->outer_header_creation_len);
+    ul_far->outer_header_creation.teid = sess->handover.gnb_dl_teid;
+
+    return qos_flow;
+
 }
 
 smf_bearer_t *smf_qos_flow_find_by_qfi(smf_sess_t *sess, uint8_t qfi)

@@ -2570,7 +2570,7 @@ abts_suite *test_5gc_n2(abts_suite *suite)
 {
     suite = ADD_SUITE(suite)
 
-#if 0
+#if 1
     abts_run_test(suite, direct_func, NULL);
     abts_run_test(suite, failure_func, NULL);
     abts_run_test(suite, cancel_func, NULL);

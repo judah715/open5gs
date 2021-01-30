@@ -31,7 +31,6 @@ int ngap_handle_pdu_session_resource_setup_response_transfer(
     uint32_t gnb_n3_teid;
     ogs_ip_t gnb_n3_ip;
 
-    ogs_pfcp_far_t *dl_far = NULL;
     bool far_update = false;
 
     NGAP_PDUSessionResourceSetupResponseTransfer_t message;
@@ -114,7 +113,7 @@ int ngap_handle_pdu_session_resource_setup_response_transfer(
                     sess, associatedQosFlowItem->qosFlowIdentifier);
 
             if (qos_flow) {
-                dl_far = qos_flow->dl_far;
+                ogs_pfcp_far_t *dl_far = qos_flow->dl_far;
                 ogs_assert(dl_far);
                 if (dl_far->apply_action != OGS_PFCP_APPLY_ACTION_FORW) {
                     far_update = true;
@@ -239,7 +238,6 @@ int ngap_handle_path_switch_request_transfer(
     uint32_t gnb_n3_teid;
     ogs_ip_t gnb_n3_ip;
 
-    ogs_pfcp_far_t *dl_far = NULL;
     bool far_update = false;
 
     NGAP_PathSwitchRequestTransfer_t message;
@@ -313,7 +311,7 @@ int ngap_handle_path_switch_request_transfer(
                     sess, acceptedQosFlowItem->qosFlowIdentifier);
 
             if (qos_flow) {
-                dl_far = qos_flow->dl_far;
+                ogs_pfcp_far_t *dl_far = qos_flow->dl_far;
                 ogs_assert(dl_far);
                 if (dl_far->apply_action != OGS_PFCP_APPLY_ACTION_FORW) {
                     far_update = true;
@@ -410,8 +408,6 @@ int ngap_handle_handover_request_ack(
     smf_ue_t *smf_ue = NULL;
     int rv, i;
 
-    ogs_pfcp_far_t *dl_far = NULL;
-
     NGAP_HandoverRequestAcknowledgeTransfer_t message;
 
     NGAP_UPTransportLayerInformation_t *dL_NGU_UP_TNLInformation = NULL;
@@ -476,7 +472,7 @@ int ngap_handle_handover_request_ack(
                     sess, qosFlowSetupResponseItem->qosFlowIdentifier);
 
             if (qos_flow) {
-                dl_far = qos_flow->dl_far;
+                ogs_pfcp_far_t *dl_far = qos_flow->dl_far;
                 ogs_assert(dl_far);
 
                 dl_far->handover.prepared = true;
@@ -525,7 +521,9 @@ int ngap_handle_handover_request_ack(
     sess->handover.prepared = true;
 
     if (sess->handover.indirect_dl_forwarding == true) {
-        smf_bearer_t *qos_flow = smf_indirect_data_forwarding_add(sess);
+        smf_bearer_t *qos_flow = NULL;
+
+        qos_flow = smf_indirect_data_forwarding_add(sess);
         ogs_assert(qos_flow);
 
         smf_5gc_pfcp_send_qos_flow_modification_request(
