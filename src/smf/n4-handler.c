@@ -834,7 +834,8 @@ void smf_n4_handle_session_report_request(
 
         smf_5gc_pfcp_send_session_modification_request(
                 error_indication_session, NULL,
-                OGS_PFCP_MODIFY_DEACTIVATE|OGS_PFCP_MODIFY_ERROR_INDICATION);
+                OGS_PFCP_MODIFY_DL_ONLY|OGS_PFCP_MODIFY_DEACTIVATE|
+                OGS_PFCP_MODIFY_ERROR_INDICATION);
 
     } else {
         ogs_error("Not supported Report Type[%d]", report_type.value);

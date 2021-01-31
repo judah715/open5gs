@@ -350,7 +350,8 @@ bool smf_nsmf_handle_update_sm_context(
          * Handle DEACTIVATED
          ********************************************************/
             smf_5gc_pfcp_send_session_modification_request(
-                    sess, stream, OGS_PFCP_MODIFY_DEACTIVATE);
+                    sess, stream,
+                    OGS_PFCP_MODIFY_DL_ONLY|OGS_PFCP_MODIFY_DEACTIVATE);
 
         } else if (SmContextUpdateData->up_cnx_state ==
                 OpenAPI_up_cnx_state_ACTIVATING) {
@@ -484,8 +485,8 @@ bool smf_nsmf_handle_update_sm_context(
             if (far_update) {
                 smf_5gc_pfcp_send_session_modification_request(
                         sess, stream,
-                        OGS_PFCP_MODIFY_ACTIVATE | OGS_PFCP_MODIFY_N2_HANDOVER |
-                        OGS_PFCP_MODIFY_END_MARKER);
+                        OGS_PFCP_MODIFY_DL_ONLY|OGS_PFCP_MODIFY_ACTIVATE|
+                        OGS_PFCP_MODIFY_N2_HANDOVER|OGS_PFCP_MODIFY_END_MARKER);
             } else {
                 char *strerror = ogs_msprintf(
                         "[%s:%d] No FAR Update", smf_ue->supi, sess->psi);
