@@ -405,7 +405,6 @@ ogs_pkbuf_t *ngap_build_handover_command_transfer(smf_sess_t *sess)
                 NGAP_QosFlowToBeForwardedItem_t *qosFlowToBeForwardedItem;
                 NGAP_QosFlowIdentifier_t *qosFlowIdentifier = NULL;
 
-                /* Indirect Data Forwarding */
                 if (!qosFlowToBeForwardedList) {
                     message.qosFlowToBeForwardedList =
                         qosFlowToBeForwardedList =
@@ -425,7 +424,6 @@ ogs_pkbuf_t *ngap_build_handover_command_transfer(smf_sess_t *sess)
 
                 *qosFlowIdentifier = pdr->qfi;
             }
-
         }
     }
 

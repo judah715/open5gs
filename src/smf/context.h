@@ -161,11 +161,6 @@ typedef struct smf_bearer_s {
     ogs_pfcp_far_t  *ul_far;
     ogs_pfcp_qer_t  *qer;
 
-    struct {
-        ogs_pfcp_pdr_t  *dl_pdr;
-        ogs_pfcp_far_t  *dl_far;
-    } handover;
-
     uint8_t         *qfi_node;      /* Pool-Node for 5GC-QFI */
     uint8_t         qfi;            /* 5G Core QFI */
     uint8_t         ebi;            /* EPC EBI */
@@ -376,10 +371,11 @@ smf_sess_t *smf_sess_find_by_error_indication_report(
         ogs_pfcp_tlv_error_indication_report_t *error_indication_report);
 
 smf_bearer_t *smf_qos_flow_add(smf_sess_t *sess);
-smf_bearer_t *smf_indirect_data_forwarding_add(smf_sess_t *sess);
 smf_bearer_t *smf_qos_flow_find_by_qfi(smf_sess_t *sess, uint8_t qfi);
 smf_bearer_t *smf_qos_flow_find_by_pcc_rule_id(
         smf_sess_t *sess, char *pcc_rule_id);
+void smf_qos_flow_create_indirect_data_forwarding(smf_sess_t *sess);
+void smf_qos_flow_delete_indirect_data_forwarding(smf_sess_t *sess);
 
 smf_bearer_t *smf_bearer_add(smf_sess_t *sess);
 int smf_bearer_remove(smf_bearer_t *bearer);

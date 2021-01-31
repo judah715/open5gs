@@ -521,13 +521,10 @@ int ngap_handle_handover_request_ack(
     sess->handover.prepared = true;
 
     if (sess->handover.indirect_data_forwarding == true) {
-        smf_bearer_t *qos_flow = NULL;
+        smf_qos_flow_create_indirect_data_forwarding(sess);
 
-        qos_flow = smf_indirect_data_forwarding_add(sess);
-        ogs_assert(qos_flow);
-
-        smf_5gc_pfcp_send_qos_flow_modification_request(
-                qos_flow, stream,
+        smf_5gc_pfcp_send_session_modification_request(
+                sess, stream,
                 OGS_PFCP_MODIFY_INDIRECT|OGS_PFCP_MODIFY_CREATE);
     } else {
         ogs_pkbuf_t *n2smbuf = ngap_build_handover_command_transfer(sess);

@@ -1376,93 +1376,72 @@ smf_bearer_t *smf_qos_flow_add(smf_sess_t *sess)
     return qos_flow;
 }
 
-smf_bearer_t *smf_indirect_data_forwarding_add(smf_sess_t *sess)
+void smf_qos_flow_create_indirect_data_forwarding(smf_sess_t *sess)
 {
     smf_bearer_t *qos_flow = NULL;
-
-    ogs_pfcp_pdr_t *dl_pdr = NULL;
-    ogs_pfcp_far_t *dl_far = NULL;
-    ogs_pfcp_qer_t *qer = NULL;
-
     ogs_assert(sess);
 
-    ogs_pool_alloc(&smf_bearer_pool, &qos_flow);
-    ogs_assert(qos_flow);
-    memset(qos_flow, 0, sizeof *qos_flow);
+    ogs_list_for_each(&sess->bearer_list, qos_flow) {
+        ogs_pfcp_pdr_t *pdr = NULL;
+        ogs_pfcp_far_t *far = NULL;
+        ogs_pfcp_qer_t *qer = NULL;
 
-    qos_flow->index = ogs_pool_index(&smf_bearer_pool, qos_flow);
-    ogs_assert(qos_flow->index > 0 && qos_flow->index <=
-            ogs_app()->pool.bearer);
+        ogs_assert(sess);
 
-    dl_pdr = ogs_pfcp_pdr_add(&sess->pfcp);
-    ogs_assert(dl_pdr);
-    qos_flow->dl_pdr = dl_pdr;
+        pdr = ogs_pfcp_pdr_add(&sess->pfcp);
+        ogs_assert(pdr);
 
-    dl_pdr->src_if = OGS_PFCP_INTERFACE_ACCESS;
+        pdr->src_if = OGS_PFCP_INTERFACE_ACCESS;
 
-    if (strlen(sess->pdn.apn))
-        dl_pdr->apn = ogs_strdup(sess->pdn.apn);
+        pdr->outer_header_removal_len = 1;
+        if (sess->pdn.pdn_type == OGS_GTP_PDN_TYPE_IPV4) {
+            pdr->outer_header_removal.description =
+                OGS_PFCP_OUTER_HEADER_REMOVAL_GTPU_UDP_IPV4;
+        } else if (sess->pdn.pdn_type == OGS_GTP_PDN_TYPE_IPV6) {
+            pdr->outer_header_removal.description =
+                OGS_PFCP_OUTER_HEADER_REMOVAL_GTPU_UDP_IPV6;
+        } else if (sess->pdn.pdn_type == OGS_GTP_PDN_TYPE_IPV4V6) {
+            pdr->outer_header_removal.description =
+                OGS_PFCP_OUTER_HEADER_REMOVAL_GTPU_UDP_IP;
+        } else
+            ogs_assert_if_reached();
 
-    dl_pdr->outer_header_removal_len = 1;
-    if (sess->pdn.pdn_type == OGS_GTP_PDN_TYPE_IPV4) {
-        dl_pdr->outer_header_removal.description =
-            OGS_PFCP_OUTER_HEADER_REMOVAL_GTPU_UDP_IPV4;
-    } else if (sess->pdn.pdn_type == OGS_GTP_PDN_TYPE_IPV6) {
-        dl_pdr->outer_header_removal.description =
-            OGS_PFCP_OUTER_HEADER_REMOVAL_GTPU_UDP_IPV6;
-    } else if (sess->pdn.pdn_type == OGS_GTP_PDN_TYPE_IPV4V6) {
-        dl_pdr->outer_header_removal.description =
-            OGS_PFCP_OUTER_HEADER_REMOVAL_GTPU_UDP_IP;
-    } else
-        ogs_assert_if_reached();
+        far = ogs_pfcp_far_add(&sess->pfcp);
+        ogs_assert(far);
 
-    dl_far = ogs_pfcp_far_add(&sess->pfcp);
-    ogs_assert(dl_far);
-    qos_flow->dl_far = dl_far;
+        far->dst_if = OGS_PFCP_INTERFACE_ACCESS;
+        ogs_pfcp_pdr_associate_far(pdr, far);
 
-    dl_far->dst_if = OGS_PFCP_INTERFACE_ACCESS;
-    ogs_pfcp_pdr_associate_far(dl_pdr, dl_far);
+        far->apply_action = OGS_PFCP_APPLY_ACTION_FORW;
 
-    dl_far->apply_action = OGS_PFCP_APPLY_ACTION_FORW;
+        qer = qos_flow->qer;
+        ogs_assert(qer);
 
-    qer = ogs_pfcp_qer_add(&sess->pfcp);
-    ogs_assert(qer);
-    qos_flow->qer = qer;
+        ogs_pfcp_pdr_associate_qer(pdr, qer);
 
-    ogs_pfcp_pdr_associate_qer(dl_pdr, qer);
+        pdr->qfi = qos_flow->qfi;
 
-    /* Allocate QFI */
-    ogs_pool_alloc(&sess->qfi_pool, &qos_flow->qfi_node);
-    ogs_assert(qos_flow->qfi_node);
+        ogs_assert(sess->pfcp_node);
+        if (sess->pfcp_node->up_function_features.ftup) {
+            pdr->f_teid.ch = 1;
+            pdr->f_teid.chid = 1;
+            pdr->f_teid.choose_id = OGS_PFCP_INDIRECT_DATA_FORWARDING_CHOOSE_ID;
+            pdr->f_teid_len = 2;
+        } else {
+            ogs_assert(sess->upf_n3_addr || sess->upf_n3_addr6);
 
-    qos_flow->qfi = dl_pdr->qfi = qer->qfi = *(qos_flow->qfi_node);
+            ogs_pfcp_sockaddr_to_f_teid(
+                    sess->upf_n3_addr, sess->upf_n3_addr6,
+                    &pdr->f_teid, &pdr->f_teid_len);
+            pdr->f_teid.teid = sess->upf_n3_teid;
+        }
 
-    qos_flow->sess = sess;
-
-    ogs_list_add(&sess->bearer_list, qos_flow);
-
-    ogs_assert(sess->pfcp_node);
-    if (sess->pfcp_node->up_function_features.ftup) {
-        dl_pdr->f_teid.ch = 1;
-        dl_pdr->f_teid.chid = 1;
-        dl_pdr->f_teid.choose_id = OGS_PFCP_INDIRECT_DATA_FORWARDING_CHOOSE_ID;
-        dl_pdr->f_teid_len = 2;
-    } else {
-        ogs_assert(sess->upf_n3_addr || sess->upf_n3_addr6);
-
-        ogs_pfcp_sockaddr_to_f_teid(
-                sess->upf_n3_addr, sess->upf_n3_addr6,
-                &dl_pdr->f_teid, &dl_pdr->f_teid_len);
-        dl_pdr->f_teid.teid = sess->upf_n3_teid;
+        ogs_pfcp_ip_to_outer_header_creation(
+                &sess->handover.gnb_dl_ip,
+                &far->outer_header_creation,
+                &far->outer_header_creation_len);
+        far->outer_header_creation.teid = sess->handover.gnb_dl_teid;
     }
-
-    ogs_pfcp_ip_to_outer_header_creation(
-            &sess->handover.gnb_dl_ip,
-            &dl_far->outer_header_creation,
-            &dl_far->outer_header_creation_len);
-    dl_far->outer_header_creation.teid = sess->handover.gnb_dl_teid;
-
-    return qos_flow;
 }
 
 smf_bearer_t *smf_qos_flow_find_by_qfi(smf_sess_t *sess, uint8_t qfi)
