@@ -376,6 +376,16 @@ void smf_5gc_n4_handle_session_modification_response(
 
             smf_namf_comm_send_n1_n2_message_transfer(sess, &param);
         }
+    } else if (flags & OGS_PFCP_MODIFY_REMOVE) {
+        if (flags & OGS_PFCP_MODIFY_INDIRECT) {
+
+            smf_sess_delete_indirect_data_forwarding(sess);
+            smf_sess_create_indirect_data_forwarding(sess);
+
+            smf_5gc_pfcp_send_session_modification_request(
+                    sess, stream,
+                    OGS_PFCP_MODIFY_INDIRECT|OGS_PFCP_MODIFY_CREATE);
+        }
     }
 }
 

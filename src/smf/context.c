@@ -1186,7 +1186,7 @@ void smf_sess_remove(smf_sess_t *sess)
 
     smf_bearer_remove_all(sess);
 
-    smf_qos_flow_delete_indirect_data_forwarding(sess);
+    smf_sess_delete_indirect_data_forwarding(sess);
 
     ogs_assert(sess->pfcp.bar);
     ogs_pfcp_bar_delete(sess->pfcp.bar);
@@ -1378,7 +1378,7 @@ smf_bearer_t *smf_qos_flow_add(smf_sess_t *sess)
     return qos_flow;
 }
 
-void smf_qos_flow_create_indirect_data_forwarding(smf_sess_t *sess)
+void smf_sess_create_indirect_data_forwarding(smf_sess_t *sess)
 {
     smf_bearer_t *qos_flow = NULL;
 
@@ -1451,7 +1451,27 @@ void smf_qos_flow_create_indirect_data_forwarding(smf_sess_t *sess)
     }
 }
 
-void smf_qos_flow_delete_indirect_data_forwarding(smf_sess_t *sess)
+bool smf_sess_have_indirect_data_forwarding(smf_sess_t *sess)
+{
+    ogs_pfcp_pdr_t *pdr = NULL;
+
+    ogs_assert(sess);
+
+    ogs_list_for_each(&sess->pfcp.pdr_list, pdr) {
+        ogs_pfcp_far_t *far = pdr->far;
+
+        ogs_assert(far);
+
+        if ((pdr->src_if == OGS_PFCP_INTERFACE_ACCESS) &&
+            (far->dst_if == OGS_PFCP_INTERFACE_ACCESS)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+void smf_sess_delete_indirect_data_forwarding(smf_sess_t *sess)
 {
     ogs_pfcp_pdr_t *pdr = NULL;
 

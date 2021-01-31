@@ -521,11 +521,18 @@ int ngap_handle_handover_request_ack(
     sess->handover.prepared = true;
 
     if (sess->handover.indirect_data_forwarding == true) {
-        smf_qos_flow_create_indirect_data_forwarding(sess);
+        if (smf_sess_have_indirect_data_forwarding(sess) == true) {
+            smf_5gc_pfcp_send_session_modification_request(
+                    sess, stream,
+                    OGS_PFCP_MODIFY_INDIRECT|OGS_PFCP_MODIFY_REMOVE);
+        } else {
 
-        smf_5gc_pfcp_send_session_modification_request(
-                sess, stream,
-                OGS_PFCP_MODIFY_INDIRECT|OGS_PFCP_MODIFY_CREATE);
+            smf_sess_create_indirect_data_forwarding(sess);
+
+            smf_5gc_pfcp_send_session_modification_request(
+                    sess, stream,
+                    OGS_PFCP_MODIFY_INDIRECT|OGS_PFCP_MODIFY_CREATE);
+        }
     } else {
         ogs_pkbuf_t *n2smbuf = ngap_build_handover_command_transfer(sess);
         ogs_assert(n2smbuf);
