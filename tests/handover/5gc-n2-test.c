@@ -2303,7 +2303,6 @@ static void indirect_func(abts_case *tc, void *data)
     ABTS_PTR_NOTNULL(tc, recvbuf);
     testngap_recv(test_ue, recvbuf);
 
-#if 0
     /* Send UplinkRANStatusTransfer */
     amf_ue_ngap_id = test_ue->amf_ue_ngap_id--;
     ran_ue_ngap_id = test_ue->ran_ue_ngap_id--;
@@ -2403,7 +2402,7 @@ static void indirect_func(abts_case *tc, void *data)
             0x4000, 28,
             NGAP_Cause_PR_radioNetwork,
             NGAP_CauseRadioNetwork_handover_desirable_for_radio_reason,
-            true);
+            false);
     ABTS_PTR_NOTNULL(tc, sendbuf);
     rv = testgnb_ngap_send(ngap2, sendbuf);
     ABTS_INT_EQUAL(tc, OGS_OK, rv);
@@ -2541,7 +2540,6 @@ static void indirect_func(abts_case *tc, void *data)
     ABTS_PTR_NOTNULL(tc, sendbuf);
     rv = testgnb_ngap_send(ngap1, sendbuf);
     ABTS_INT_EQUAL(tc, OGS_OK, rv);
-#endif
 
     ogs_msleep(300);
 
@@ -2570,13 +2568,10 @@ abts_suite *test_5gc_n2(abts_suite *suite)
 {
     suite = ADD_SUITE(suite)
 
-#if 0
     abts_run_test(suite, direct_func, NULL);
     abts_run_test(suite, failure_func, NULL);
     abts_run_test(suite, cancel_func, NULL);
-#else
     abts_run_test(suite, indirect_func, NULL);
-#endif
 
     return suite;
 }
