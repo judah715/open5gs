@@ -1186,6 +1186,8 @@ void smf_sess_remove(smf_sess_t *sess)
 
     smf_bearer_remove_all(sess);
 
+    smf_qos_flow_delete_indirect_data_forwarding(sess);
+
     ogs_assert(sess->pfcp.bar);
     ogs_pfcp_bar_delete(sess->pfcp.bar);
 
@@ -1379,6 +1381,7 @@ smf_bearer_t *smf_qos_flow_add(smf_sess_t *sess)
 void smf_qos_flow_create_indirect_data_forwarding(smf_sess_t *sess)
 {
     smf_bearer_t *qos_flow = NULL;
+
     ogs_assert(sess);
 
     ogs_list_for_each(&sess->bearer_list, qos_flow) {
@@ -1441,6 +1444,29 @@ void smf_qos_flow_create_indirect_data_forwarding(smf_sess_t *sess)
                 &far->outer_header_creation,
                 &far->outer_header_creation_len);
         far->outer_header_creation.teid = sess->handover.gnb_dl_teid;
+
+        /* Indirect Data Forwarding PDRs is set to highest precedence
+         * (lowest precedence value) */
+        pdr->precedence = 1;
+    }
+}
+
+void smf_qos_flow_delete_indirect_data_forwarding(smf_sess_t *sess)
+{
+    ogs_pfcp_pdr_t *pdr = NULL;
+
+    ogs_assert(sess);
+
+    ogs_list_for_each(&sess->pfcp.pdr_list, pdr) {
+        ogs_pfcp_far_t *far = pdr->far;
+
+        ogs_assert(far);
+
+        if ((pdr->src_if == OGS_PFCP_INTERFACE_ACCESS) &&
+            (far->dst_if == OGS_PFCP_INTERFACE_ACCESS)) {
+            ogs_pfcp_pdr_remove(pdr);
+            ogs_pfcp_far_remove(far);
+        }
     }
 }
 
